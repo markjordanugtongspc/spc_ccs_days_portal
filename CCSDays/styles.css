@@ -1,0 +1,154 @@
+			/* Custom Color Palette */
+			:root {
+				--color-dark-1: #041421;
+				--color-dark-2: #042630;
+				--color-teal: #4c7273;
+				--color-teal-light: #86b9b0;
+				--color-light: #d0d6d6;
+			}
+
+			/* Global link styles */
+			a {
+				text-decoration: none;
+			}
+
+			a:hover {
+				text-decoration: none;
+			}
+
+			/* Tailwind CSS Custom Colors */
+			.bg-dark-1 { background-color: var(--color-dark-1); }
+			.bg-dark-2 { background-color: var(--color-dark-2); }
+			.bg-teal { background-color: var(--color-teal); }
+			.bg-teal-light { background-color: var(--color-teal-light); }
+			.bg-light { background-color: var(--color-light); }
+			
+			/* Text Colors */
+			.text-dark-1 { color: var(--color-dark-1); }
+			.text-dark-2 { color: var(--color-dark-2); }
+			.text-teal { color: var(--color-teal); }
+			.text-teal-light { color: var(--color-teal-light); }
+			.text-light { color: var(--color-light); }
+			
+			/* Border Colors */
+			.border-dark-1 { border-color: var(--color-dark-1); }
+			.border-dark-2 { border-color: var(--color-dark-2); }
+			.border-teal { border-color: var(--color-teal); }
+			.border-teal-light { border-color: var(--color-teal-light); }
+			.border-light { border-color: var(--color-light); }
+			
+			/* Gradient Backgrounds */
+			.bg-gradient-teal { background: linear-gradient(135deg, var(--color-dark-1) 0%, var(--color-dark-2) 100%); }
+			.bg-gradient-button { background: linear-gradient(90deg, var(--color-teal) 0%, var(--color-teal-light) 100%); }
+			
+			/* Hover Effects */
+			.hover-teal:hover { color: var(--color-teal-light); }
+			.hover-bg-teal:hover { background-color: var(--color-teal); }
+			
+			/* Transitions */
+			.transition-all { transition: all 0.3s ease; }
+
+			/* Animation Keyframes */
+			@keyframes float {
+				0% { transform: translateY(0px); }
+				50% { transform: translateY(-15px); }
+				100% { transform: translateY(0px); }
+			}
+
+			.float-animation {
+				animation: float 6s ease-in-out infinite;
+			}
+
+			@keyframes pulse {
+				0%, 100% { opacity: 1; }
+				50% { opacity: 0.7; }
+			}
+
+			.pulse-animation {
+				animation: pulse 4s ease-in-out infinite;
+			}
+
+			/* Input focus animation */
+			@keyframes focusAnimation {
+				0% { box-shadow: 0 0 0 0 rgba(134, 185, 176, 0.4); }
+				70% { box-shadow: 0 0 0 10px rgba(134, 185, 176, 0); }
+				100% { box-shadow: 0 0 0 0 rgba(134, 185, 176, 0); }
+			}
+
+			.focus-animation:focus {
+				animation: focusAnimation 1.5s ease-in-out;
+			}
+
+			/* Custom Shadows */
+			.shadow-teal {
+				box-shadow: 0 4px 20px rgba(134, 185, 176, 0.15);
+			}
+
+			.shadow-inner-teal {
+				box-shadow: inset 0 2px 4px rgba(4, 38, 48, 0.25);
+			}
+
+			/* Button click animation */
+			@keyframes buttonClick {
+				0% { transform: scale(1); }
+				50% { transform: scale(0.95); }
+				100% { transform: scale(1); }
+			}
+
+			.btn-click-animation:active {
+				animation: buttonClick 0.3s ease-in-out;
+			}
+
+			/* Parallax effect */
+			@keyframes parallaxMove {
+				0% { transform: translateX(0) translateY(0); }
+				25% { transform: translateX(5px) translateY(5px); }
+				50% { transform: translateX(0) translateY(10px); }
+				75% { transform: translateX(-5px) translateY(5px); }
+				100% { transform: translateX(0) translateY(0); }
+			}
+
+			.parallax-bg {
+				animation: parallaxMove 20s ease-in-out infinite;
+			}
+
+			/* Ripple animation */
+			.ripple-bg {
+				position: absolute;
+				width: 100%;
+				height: 100%;
+				background: radial-gradient(circle at center, rgba(134, 185, 176, 0.05) 0%, transparent 70%);
+			}
+
+			@keyframes ripple {
+				0% { transform: scale(1); opacity: 0.3; }
+				100% { transform: scale(1.5); opacity: 0; }
+			}
+
+			.ripple-animation {
+				animation: ripple 8s linear infinite;
+			}
+
+			/* Shimmer effect */
+			.shimmer {
+				position: absolute;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+				background: linear-gradient(
+					135deg,
+					rgba(134, 185, 176, 0) 0%,
+					rgba(134, 185, 176, 0.05) 50%,
+					rgba(134, 185, 176, 0) 100%
+				);
+				background-size: 200% 200%;
+				animation: shimmerEffect 10s ease infinite;
+			}
+
+			@keyframes shimmerEffect {
+				0% { background-position: 0% 0%; }
+				50% { background-position: 100% 100%; }
+				100% { background-position: 0% 0%; }
+			}
+		

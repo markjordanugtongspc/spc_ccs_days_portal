@@ -1,0 +1,198 @@
+/* Common components for all dashboard pages */
+
+/* Sidebar */
+.sidebar {
+    width: 240px;
+    height: 100vh;
+    position: fixed;
+    left: 0;
+    top: 0;
+    background-color: var(--color-dark-2);
+    border-right: 1px solid rgba(134, 185, 176, 0.1);
+    z-index: 40;
+}
+
+.sidebar-logo {
+    padding: 1.5rem;
+    border-bottom: 1px solid rgba(134, 185, 176, 0.1);
+}
+
+.sidebar-menu {
+    padding: 1rem 0;
+}
+
+.sidebar-link {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    color: var(--text-light);
+    transition: all 0.2s ease;
+    text-decoration: none;
+    border-radius: 0.375rem;
+    margin: 0 0.5rem 0.25rem 0.5rem;
+}
+
+.sidebar-link:hover {
+    background-color: var(--color-dark-1);
+    color: var(--color-teal-light);
+    text-decoration: none;
+}
+
+.sidebar-link.active {
+    background-color: var(--color-teal-900);
+    color: var(--color-teal-light);
+    text-decoration: none;
+}
+
+.sidebar-link .icon {
+    margin-right: 0.75rem;
+}
+
+/* Main Content */
+.main-content {
+    margin-left: 240px;
+    min-height: 100vh;
+    background-color: var(--color-dark-1);
+}
+
+/* Topbar */
+.topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    background-color: var(--color-dark-2);
+    border-bottom: 1px solid rgba(134, 185, 176, 0.1);
+    height: 64px;
+}
+
+.topbar-title {
+    font-weight: 700;
+    font-size: 1.25rem;
+    color: var(--color-light);
+}
+
+.topbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.notification-badge {
+    position: relative;
+}
+
+.notification-badge .badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background-color: #f97316;
+    color: white;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    min-width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 5px;
+}
+
+/* Dashboard Container */
+.dashboard-container {
+    padding: 1.5rem;
+}
+
+.page-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    color: var(--color-light);
+}
+
+/* Tab Navigation */
+.tab-nav {
+    display: flex;
+    border-bottom: 1px solid rgba(134, 185, 176, 0.1);
+    margin-bottom: 1.5rem;
+}
+
+.tab-item {
+    padding: 0.75rem 1rem;
+    color: var(--color-light);
+    opacity: 0.7;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-bottom: 2px solid transparent;
+}
+
+.tab-item.active {
+    color: var(--color-teal-light);
+    opacity: 1;
+    border-bottom: 2px solid var(--color-teal-light);
+}
+
+/* Common Button Styles */
+.action-button {
+    background-color: var(--color-dark-1);
+    color: var(--color-light);
+    border: 1px solid rgba(134, 185, 176, 0.3);
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+}
+
+.action-button:hover {
+    background-color: rgba(134, 185, 176, 0.1);
+}
+
+.primary-button {
+    background-color: var(--color-teal-900);
+    color: var(--color-teal-light);
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+}
+
+.primary-button:hover {
+    background-color: var(--color-teal-800);
+}
+
+/* User Info */
+.user-info {
+    display: flex;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    border-top: 1px solid rgba(134, 185, 176, 0.1);
+}
+
+.user-avatar {
+    width: 2.5rem;
+    height: 2.5rem;
+    background-color: var(--color-teal);
+    border-radius: 9999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 0.75rem;
+    font-weight: 700;
+}
+
+.user-details {
+    flex-grow: 1;
+}
+
+.user-name {
+    font-weight: 600;
+}
+
+.user-role {
+    font-size: 0.75rem;
+    opacity: 0.7;
+} 
