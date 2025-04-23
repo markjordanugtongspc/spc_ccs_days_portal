@@ -31,14 +31,8 @@
 }
 
 .sidebar-link:hover {
-    background-color: var(--dark-2);
-    color: var(--teal-light);
-    text-decoration: none;
-}
-
-.sidebar-link.active {
-    background-color: var(--teal-900);
-    color: var(--teal-light);
+    background-color: var(--color-dark-2);
+    color: var(--color-teal-light);
     text-decoration: none;
 }
 
@@ -384,4 +378,41 @@
     display: grid;
     grid-template-columns: 1fr 300px;
     gap: 1.5rem;
+}
+
+/* Tab Panels */
+.tab-panel {
+    display: block;
+    width: 100%;
+}
+
+.tab-panel.hidden {
+    display: none;
+}
+
+.tab-panel.active {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.loading-spinner {
+    min-height: 200px;
+}
+
+/* Dark Mode Fixes */
+.dark .text-red-500 {
+    color: #ef4444;
+}
+
+/* Error Message */
+.error-message {
+    background-color: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    margin: 1.5rem 0;
 } 

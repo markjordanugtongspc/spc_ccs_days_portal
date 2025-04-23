@@ -11,11 +11,20 @@ document.addEventListener('DOMContentLoaded', function() {
     sidebarLinks.forEach(link => {
         const linkPath = link.getAttribute('href');
         
-        // Check if current page matches the link
-        if (currentPath.includes(linkPath) && linkPath !== "#") {
+        // Special case for events.php to ensure it stays active
+        if (linkPath === 'events.php' && currentPath.endsWith('/events.php')) {
+            // Keep or add the active class for the Events link on the events page
+            link.classList.add('active');
+            // Let the CSS handle the styling through the active class
+        }
+        // For other links, add active class if the current path matches
+        else if (currentPath.includes(linkPath) && linkPath !== "#") {
             link.classList.add('active');
         } else {
-            link.classList.remove('active');
+            // Don't remove active class from Events link on events.php
+            if (!(linkPath === 'events.php' && currentPath.endsWith('/events.php'))) {
+                link.classList.remove('active');
+            }
         }
     });
     

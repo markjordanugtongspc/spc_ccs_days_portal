@@ -2,8 +2,13 @@
 			:root {
 				--color-dark-1: #041421;
 				--color-dark-2: #042630;
+				--color-dark-3: #05303d;
+				--color-dark-4: #063b4b;
 				--color-teal: #4c7273;
 				--color-teal-light: #86b9b0;
+				--color-teal-dark: #386062; /* Darker variant of teal */
+				--color-teal-800: #355758;
+				--color-teal-900: #243b3c;
 				--color-light: #d0d6d6;
 			}
 
@@ -19,22 +24,35 @@
 			/* Tailwind CSS Custom Colors */
 			.bg-dark-1 { background-color: var(--color-dark-1); }
 			.bg-dark-2 { background-color: var(--color-dark-2); }
+			.bg-dark-3 { background-color: var(--color-dark-3); }
+			.bg-dark-4 { background-color: var(--color-dark-4); }
 			.bg-teal { background-color: var(--color-teal); }
 			.bg-teal-light { background-color: var(--color-teal-light); }
+			.bg-teal-dark { background-color: var(--color-teal-dark); }
+			.bg-teal-800 { background-color: var(--color-teal-800); }
+			.bg-teal-900 { background-color: var(--color-teal-900); }
 			.bg-light { background-color: var(--color-light); }
 			
 			/* Text Colors */
 			.text-dark-1 { color: var(--color-dark-1); }
 			.text-dark-2 { color: var(--color-dark-2); }
+			.text-dark-3 { color: var(--color-dark-3); }
+			.text-dark-4 { color: var(--color-dark-4); }
 			.text-teal { color: var(--color-teal); }
 			.text-teal-light { color: var(--color-teal-light); }
+			.text-teal-800 { color: var(--color-teal-800); }
+			.text-teal-900 { color: var(--color-teal-900); }
 			.text-light { color: var(--color-light); }
 			
 			/* Border Colors */
 			.border-dark-1 { border-color: var(--color-dark-1); }
 			.border-dark-2 { border-color: var(--color-dark-2); }
+			.border-dark-3 { border-color: var(--color-dark-3); }
+			.border-dark-4 { border-color: var(--color-dark-4); }
 			.border-teal { border-color: var(--color-teal); }
 			.border-teal-light { border-color: var(--color-teal-light); }
+			.border-teal-800 { border-color: var(--color-teal-800); }
+			.border-teal-900 { border-color: var(--color-teal-900); }
 			.border-light { border-color: var(--color-light); }
 			
 			/* Gradient Backgrounds */
@@ -44,6 +62,7 @@
 			/* Hover Effects */
 			.hover-teal:hover { color: var(--color-teal-light); }
 			.hover-bg-teal:hover { background-color: var(--color-teal); }
+			.hover\:bg-teal-dark:hover { background-color: var(--color-teal-dark); }
 			
 			/* Transitions */
 			.transition-all { transition: all 0.3s ease; }

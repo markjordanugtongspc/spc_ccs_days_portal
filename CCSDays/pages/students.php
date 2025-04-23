@@ -77,6 +77,120 @@ $conn->close();
 $userName = $_SESSION['user_name'] ?? 'Admin';
 $userRole = ucfirst($_SESSION['user_role'] ?? 'Admin');
 $userInitials = strtoupper(substr($userName, 0, 1)) . (strpos($userName, ' ') !== false ? strtoupper(substr($userName, strpos($userName, ' ') + 1, 1)) : '');
+
+// Check if this is a partial request (for embedding in dashboard)
+$isPartial = isset($_GET['partial']) && $_GET['partial'] === 'true';
+
+// If it's a partial request, we'll only render the main content
+// If it's a partial request, we'll only render the main content
+if ($isPartial) {
+    // Output just the main content for embedding in dashboard
+?>
+    <h1 class="page-title">Student Management</h1>
+    
+    <!-- Search and Filter Section -->
+    <div class="flex flex-wrap justify-between items-center mb-6">
+        <div class="search-container w-full md:w-1/2 mb-4 md:mb-0">
+            <div class="relative">
+                <input type="text" id="searchInput" class="search-input w-full" placeholder="Search by name, ID, or course...">
+                <button class="absolute right-3 top-1/2 transform -translate-y-1/2 text-teal-light" onclick="searchStudents()">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <div class="flex space-x-2">
+            <button class="action-button primary-button" onclick="showAddStudentModal()">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-1">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                </svg>
+                Add Student
+            </button>
+            <button class="action-button">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-1">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                </svg>
+                Export List
+            </button>
+        </div>
+    </div>
+    
+    <!-- Student Grid -->
+    <div class="grid grid-cols-4 gap-4" id="studentContainer">
+        <!-- Student cards will be generated here by JavaScript -->
+    </div>
+
+    <!-- Student Details Modal -->
+    <div id="studentModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
+        <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity"></div>
+        <div class="relative bg-dark-2 rounded-lg max-w-md w-full mx-4 overflow-hidden shadow-xl transform transition-all">
+            <div class="absolute top-0 right-0 pt-4 pr-4">
+                <button type="button" class="close-modal bg-transparent rounded-md text-gray-400 hover:text-light">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="p-6" id="modalContent">
+                <!-- Modal content will be populated dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Convert PHP student data to JavaScript
+        const allStudents = <?php echo json_encode($students); ?>;
+        const firstYearStudents = <?php echo json_encode($firstYearStudents); ?>;
+        const secondYearStudents = <?php echo json_encode($secondYearStudents); ?>;
+        const thirdYearStudents = <?php echo json_encode($thirdYearStudents); ?>;
+        const fourthYearStudents = <?php echo json_encode($fourthYearStudents); ?>;
+        
+        // Initialize students page when loaded in dashboard
+        window.initializeStudentsPage = function() {
+            // Map database fields to our frontend structure
+            function mapStudents(students) {
+                return students.map(student => {
+                    // Determine year level based on the Year field
+                    let yearLabel;
+                    switch(student.Year) {
+                        case '1': yearLabel = '1st'; break;
+                        case '2': yearLabel = '2nd'; break;
+                        case '3': yearLabel = '3rd'; break;
+                        case '4': yearLabel = '4th'; break;
+                        case 1: yearLabel = '1st'; break;  // Handle non-string numbers
+                        case 2: yearLabel = '2nd'; break;
+                        case 3: yearLabel = '3rd'; break;
+                        case 4: yearLabel = '4th'; break;
+                        default: yearLabel = student.Year;
+                    }
+                    
+                    return {
+                        id: student.Student_ID,
+                        name: student.Name,
+                        year: yearLabel,
+                        course: student.College || 'CCS',
+                        email: student.Email || student.Name.toLowerCase().replace(/\s+/g, '.') + '@example.com',
+                        phone: student.Phone || '123-456-7890',
+                        status: student.Status || 'Active',
+                        attendance: parseInt(student.Attendance) || 0,
+                        gender: student.Gender
+                    };
+                });
+            }
+            
+            // Mapped student data
+            const mappedAllStudents = mapStudents(allStudents);
+            
+            // Display students
+            displayStudents(mappedAllStudents);
+            
+            // Set up modal functionality
+            setupModalHandlers();
+        };
+    </script>
+<?php
+} else {
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -124,7 +238,7 @@ $userInitials = strtoupper(substr($userName, 0, 1)) . (strpos($userName, ' ') !=
                 </svg>
                 Students
             </a>
-            <a href="#" class="sidebar-link">
+            <a href="events.php" class="sidebar-link">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 icon">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5m-9-6h.008v.008H12v-.008zM12 15h.008v.008H12V15zm0 2.25h.008v.008H12v-.008zM9.75 15h.008v.008H9.75V15zm0 2.25h.008v.008H9.75v-.008zM7.5 15h.008v.008H7.5V15zm0 2.25h.008v.008H7.5v-.008zm6.75-4.5h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008V15zm0 2.25h.008v.008h-.008v-.008zm2.25-4.5h.008v.008H16.5v-.008zm0 2.25h.008H16.5V15z" />
                 </svg>
@@ -1111,4 +1225,7 @@ $userInitials = strtoupper(substr($userName, 0, 1)) . (strpos($userName, ' ') !=
         }
     </script>
 </body>
-</html> 
+</html>
+<?php
+}
+?>

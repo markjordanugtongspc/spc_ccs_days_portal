@@ -224,4 +224,26 @@ document.addEventListener('DOMContentLoaded', function () {
             console.log('Theme toggle clicked');
         });
     }
+    // Handle tab switching in dashboard if elements exist
+    const tabItems = document.querySelectorAll('.tab-item');
+    const tabPanels = document.querySelectorAll('.tab-panel');
+    
+    if (tabItems.length > 0 && tabPanels.length > 0) {
+        tabItems.forEach(tab => {
+            tab.addEventListener('click', function() {
+                const tabName = this.getAttribute('data-tab');
+                
+                // Update active tab
+                tabItems.forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Update content visibility
+                tabPanels.forEach(panel => panel.classList.add('hidden'));
+                const activePanel = document.getElementById(`${tabName}-content`);
+                if (activePanel) {
+                    activePanel.classList.remove('hidden');
+                }
+            });
+        });
+    }
 });
