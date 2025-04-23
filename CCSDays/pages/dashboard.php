@@ -124,7 +124,7 @@ $userInitials = strtoupper(substr($userName, 0, 1)) . (strpos($userName, ' ') !=
 				
 				<div id="tab-content">
 					<!-- Tab content will be loaded here -->
-					<div id="dashboard-content" class="tab-panel active">
+					<div id="dashboard-content" class="tab-panel active" style="display: block;">
 						<h1 class="page-title">Dashboard</h1>
 						
 						<div class="stats-container">
@@ -343,7 +343,7 @@ $userInitials = strtoupper(substr($userName, 0, 1)) . (strpos($userName, ' ') !=
 							</div>
 						</div>
 					</div>
-					</div>
+				</div>
 				</div>
 			</div>
 		</div>
@@ -401,7 +401,6 @@ $userInitials = strtoupper(substr($userName, 0, 1)) . (strpos($userName, ' ') !=
 				
 				// Update clock every second
 				setInterval(updateClock, 1000);
-			});
 		</script>
 	</body>
 </html> 

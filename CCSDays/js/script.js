@@ -226,9 +226,9 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     // Handle tab switching in dashboard if elements exist
     const tabItems = document.querySelectorAll('.tab-item');
-    const tabPanels = document.querySelectorAll('.tab-panel');
+    const tabContent = document.getElementById('tab-content');
     
-    if (tabItems.length > 0 && tabPanels.length > 0) {
+    if (tabItems.length > 0 && tabContent) {
         tabItems.forEach(tab => {
             tab.addEventListener('click', function() {
                 const tabName = this.getAttribute('data-tab');
@@ -237,13 +237,118 @@ document.addEventListener('DOMContentLoaded', function () {
                 tabItems.forEach(t => t.classList.remove('active'));
                 this.classList.add('active');
                 
-                // Update content visibility
-                tabPanels.forEach(panel => panel.classList.add('hidden'));
-                const activePanel = document.getElementById(`${tabName}-content`);
-                if (activePanel) {
-                    activePanel.classList.remove('hidden');
+                // Show loading indicator
+                tabContent.innerHTML = `
+                    <div class="flex justify-center items-center p-8">
+                        <svg class="animate-spin -ml-1 mr-3 h-8 w-8 text-teal-light" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span>Loading content...</span>
+                    </div>
+                `;
+                
+                if (tabName === 'dashboard') {
+                    // Show dashboard content
+                    loadDashboardContent();
+                    // Set up auto-refresh for dashboard content
+                    startDashboardAutoRefresh();
+                } else if (tabName === 'students') {
+                    // Fetch students content
+                    loadStudentsContent();
+                } else if (tabName === 'events') {
+                    // Fetch events content
+                    loadEventsContent();
                 }
             });
         });
+    }
+    
+    // Auto-refresh intervals
+    let dashboardRefreshInterval = null;
+    let studentsRefreshInterval = null;
+    
+    // Function to start dashboard auto-refresh
+    function startDashboardAutoRefresh() {
+        // Clear any existing interval
+        if (dashboardRefreshInterval) {
+            clearInterval(dashboardRefreshInterval);
+        }
+        
+        // Set up new interval - refresh every 30 seconds
+        dashboardRefreshInterval = setInterval(() => {
+            // Only refresh if dashboard tab is active
+            const activeTab = document.querySelector('.tab-item.active');
+            if (activeTab && activeTab.getAttribute('data-tab') === 'dashboard') {
+                refreshDashboardStats();
+            }
+        }, 30000); // 30 seconds
+    }
+    
+    // Function to refresh dashboard statistics
+    function refreshDashboardStats() {
+        // Update time elements
+        updatePhilippinesTime();
+        
+        // In a real implementation, you would fetch updated stats from the server
+        // For now, we'll just update the time elements
+    }
+    
+    // Function to load dashboard content
+    function loadDashboardContent() {
+        // Get the dashboard content from the page
+        const dashboardContent = document.getElementById('dashboard-content');
+        if (dashboardContent) {
+            // Clone the dashboard content
+            const content = dashboardContent.cloneNode(true);
+            // Display the content
+            document.getElementById('tab-content').innerHTML = '';
+            document.getElementById('tab-content').appendChild(content);
+            // Make sure the content is visible
+            content.classList.add('active');
+            content.style.display = 'block';
+        }
+    }
+    
+    // Function to load students content with live data
+    function loadStudentsContent() {
+        fetch('students.php?partial=true')
+            .then(response => response.text())
+            .then(html => {
+                const tabContent = document.getElementById('tab-content');
+                tabContent.innerHTML = html;
+                
+                // Initialize students page functionality
+                if (typeof window.initializeStudentsPage === 'function') {
+                    window.initializeStudentsPage();
+                } else {
+                    console.error('Students page initialization function not found');
+                }
+            })
+            .catch(error => {
+                console.error('Error loading students content:', error);
+                document.getElementById('tab-content').innerHTML = '<div class="p-4">Error loading content. Please try again.</div>';
+            });
+    }
+    
+    // Function to load events content
+    function loadEventsContent() {
+        fetch('events.php?partial=true')
+            .then(response => response.text())
+            .then(html => {
+                const tabContent = document.getElementById('tab-content');
+                tabContent.innerHTML = html;
+                
+                // Initialize events page functionality
+                if (typeof window.initializeEventsPage === 'function') {
+                    window.initializeEventsPage();
+                } else {
+                    console.error('Events page initialization function not found');
+                }
+            })
+            .catch(error => {
+                console.error('Error loading events content:', error);
+                document.getElementById('tab-content').innerHTML = '<div class="p-4">Error loading content. Please try again.</div>';
+            });
     }
 });

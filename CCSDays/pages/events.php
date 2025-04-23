@@ -22,7 +22,121 @@ $userInitials = strtoupper(substr($userName, 0, 1)) . (strpos($userName, ' ') !=
 $isPartial = isset($_GET['partial']) && $_GET['partial'] === 'true';
 
 // If it's a partial request, we'll only render the main content
-if (!$isPartial) {
+if ($isPartial) {
+    // Output just the main content for embedding in dashboard
+?>
+    <h1 class="page-title">Events Management</h1>
+    
+    <!-- Action Buttons -->
+    <div class="flex gap-4 mb-6">
+        <button id="createEventBtn" class="action-button bg-teal-light text-dark-1 hover:bg-teal-dark transition-all flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+            Create Event
+        </button>
+        <button id="pendingEventsBtn" class="action-button flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Pending Approvals
+            <span class="ml-2 bg-teal-light text-dark-1 px-2 py-0.5 rounded-full text-xs">7</span>
+        </button>
+    </div>
+    
+    <!-- Events Table -->
+    <div class="bg-dark-2 rounded-lg overflow-hidden mb-6">
+        <table class="w-full text-left">
+            <thead class="bg-dark-3 text-teal-light">
+                <tr>
+                    <th class="px-4 py-3">Event Name</th>
+                    <th class="px-4 py-3">Date & Time</th>
+                    <th class="px-4 py-3">Venue</th>
+                    <th class="px-4 py-3">Status</th>
+                    <th class="px-4 py-3">Reminder</th>
+                    <th class="px-4 py-3">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-dark-3">
+                <tr class="hover:bg-dark-3 transition-all">
+                    <td class="px-4 py-3">Programming Competition</td>
+                    <td class="px-4 py-3">2023-04-19 • 10:00 AM</td>
+                    <td class="px-4 py-3">CCS Laboratory</td>
+                    <td class="px-4 py-3"><span class="status-badge approved">approved</span></td>
+                    <td class="px-4 py-3"><span class="text-teal-light">Active</span></td>
+                    <td class="px-4 py-3">
+                        <div class="flex gap-2">
+                            <button class="icon-button view-event" data-id="1">View</button>
+                            <button class="icon-button edit-event" data-id="1">Edit</button>
+                        </div>
+                    </td>
+                </tr>
+                <tr class="hover:bg-dark-3 transition-all">
+                    <td class="px-4 py-3">Web Development Workshop</td>
+                    <td class="px-4 py-3">2023-04-19 • 2:30 PM</td>
+                    <td class="px-4 py-3">Multi-Purpose Hall</td>
+                    <td class="px-4 py-3"><span class="status-badge pending">pending</span></td>
+                    <td class="px-4 py-3"><span class="text-gray-400">Not set</span></td>
+                    <td class="px-4 py-3">
+                        <div class="flex gap-2">
+                            <button class="icon-button view-event" data-id="2">View</button>
+                            <button class="icon-button approve-event" data-id="2">Approve</button>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        // Initialize events page when loaded in dashboard
+        window.initializeEventsPage = function() {
+            // Set up event handlers for buttons
+            document.querySelectorAll('.view-event').forEach(button => {
+                button.addEventListener('click', function() {
+                    const eventId = this.getAttribute('data-id');
+                    // View event logic
+                    console.log('View event:', eventId);
+                });
+            });
+            
+            document.querySelectorAll('.edit-event').forEach(button => {
+                button.addEventListener('click', function() {
+                    const eventId = this.getAttribute('data-id');
+                    // Edit event logic
+                    console.log('Edit event:', eventId);
+                });
+            });
+            
+            document.querySelectorAll('.approve-event').forEach(button => {
+                button.addEventListener('click', function() {
+                    const eventId = this.getAttribute('data-id');
+                    // Approve event logic
+                    console.log('Approve event:', eventId);
+                });
+            });
+            
+            // Create event button
+            const createEventBtn = document.getElementById('createEventBtn');
+            if (createEventBtn) {
+                createEventBtn.addEventListener('click', function() {
+                    // Create event logic
+                    console.log('Create new event');
+                });
+            }
+            
+            // Pending events button
+            const pendingEventsBtn = document.getElementById('pendingEventsBtn');
+            if (pendingEventsBtn) {
+                pendingEventsBtn.addEventListener('click', function() {
+                    // Show pending events logic
+                    console.log('Show pending events');
+                });
+            }
+        };
+    </script>
+<?php
+} else {
 ?>
 <!DOCTYPE html>
 <html lang="en">

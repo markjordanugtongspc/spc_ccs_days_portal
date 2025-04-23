@@ -6,8 +6,8 @@ document.addEventListener('DOMContentLoaded', initializeStudentsPage);
 // and when loaded via AJAX in dashboard tabs
 function initializeStudentsPage() {
     // Check if we're in the context of a loaded tab or the full page
-    const isTabContent = document.getElementById('students-content') !== null;
-    const containerSelector = isTabContent ? '#students-content' : '.dashboard-container';
+    const isInDashboard = document.getElementById('tab-content') !== null;
+    const containerSelector = isInDashboard ? '#tab-content' : '.dashboard-container';
     
     // Search functionality
     const searchInput = document.querySelector(`${containerSelector} .student-search`);
