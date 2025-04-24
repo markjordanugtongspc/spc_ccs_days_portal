@@ -28,16 +28,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Tab navigation
-    const tabItems = document.querySelectorAll('.tab-item');
-    
-    tabItems.forEach((tab, index) => {
-        tab.addEventListener('click', function() {
-            tabItems.forEach(item => item.classList.remove('active'));
-            this.classList.add('active');
-        });
-    });
-    
     // Theme toggle functionality
     const themeToggle = document.getElementById('themeToggle');
     if (themeToggle) {

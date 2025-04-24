@@ -81,115 +81,55 @@ $userInitials = strtoupper(substr($userName, 0, 1)) . (strpos($userName, ' ') !=
 // Check if this is a partial request (for embedding in dashboard)
 $isPartial = isset($_GET['partial']) && $_GET['partial'] === 'true';
 
-// If it's a partial request, we'll only render the main content
-// If it's a partial request, we'll only render the main content
 if ($isPartial) {
-    // Output just the main content for embedding in dashboard
-?>
-    <h1 class="page-title">Student Management</h1>
-    
-    <!-- Search and Filter Section -->
-    <div class="flex flex-wrap justify-between items-center mb-6">
-        <div class="search-container w-full md:w-1/2 mb-4 md:mb-0">
-            <div class="relative">
-                <input type="text" id="searchInput" class="search-input w-full" placeholder="Search by name, ID, or course...">
-                <button class="absolute right-3 top-1/2 transform -translate-y-1/2 text-teal-light" onclick="searchStudents()">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+    // Output only the main content for embedding in dashboard
+    ?>
+    <div class="flex flex-col space-y-4">
+        <div class="flex justify-between items-center">
+            <div class="relative flex-grow max-w-md">
+                <input type="text" id="searchInput" placeholder="Search students..." class="w-full pl-10 pr-4 py-2 rounded-lg bg-dark-2 text-light border border-dark-3 focus:border-teal focus:ring-1 focus:ring-teal focus:outline-none">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                     </svg>
-                </button>
             </div>
         </div>
-        <div class="flex space-x-2">
-            <button class="action-button primary-button" onclick="showAddStudentModal()">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-1">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                </svg>
-                Add Student
-            </button>
-            <button class="action-button">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-1">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-                </svg>
-                Export List
-            </button>
         </div>
+
+        <div id="studentContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <!-- Student cards will be dynamically inserted here -->
     </div>
     
-    <!-- Student Grid -->
-    <div class="grid grid-cols-4 gap-4" id="studentContainer">
-        <!-- Student cards will be generated here by JavaScript -->
+        <div id="showMoreContainer" class="flex justify-center mt-4" style="display: none;">
+            <button id="showMoreBtn" class="px-4 py-2 bg-teal text-dark font-medium rounded-lg hover:bg-teal-light transition-colors">
+                Show More
+            </button>
+        </div>
     </div>
 
-    <!-- Student Details Modal -->
-    <div id="studentModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
-        <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity"></div>
-        <div class="relative bg-dark-2 rounded-lg max-w-md w-full mx-4 overflow-hidden shadow-xl transform transition-all">
-            <div class="absolute top-0 right-0 pt-4 pr-4">
-                <button type="button" class="close-modal bg-transparent rounded-md text-gray-400 hover:text-light">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+    <div id="studentModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-dark-2 rounded-lg p-6 max-w-lg w-full mx-4">
+            <div class="flex justify-between items-start mb-4">
+                <h2 class="text-xl font-semibold text-light">Student Details</h2>
+                <button class="close-modal text-gray-400 hover:text-light">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                     </svg>
                 </button>
             </div>
-            <div class="p-6" id="modalContent">
-                <!-- Modal content will be populated dynamically -->
+            <div id="studentModalContent">
+                <!-- Modal content will be dynamically inserted here -->
             </div>
         </div>
     </div>
 
     <script>
-        // Convert PHP student data to JavaScript
-        const allStudents = <?php echo json_encode($students); ?>;
-        const firstYearStudents = <?php echo json_encode($firstYearStudents); ?>;
-        const secondYearStudents = <?php echo json_encode($secondYearStudents); ?>;
-        const thirdYearStudents = <?php echo json_encode($thirdYearStudents); ?>;
-        const fourthYearStudents = <?php echo json_encode($fourthYearStudents); ?>;
-        
-        // Initialize students page when loaded in dashboard
-        window.initializeStudentsPage = function() {
-            // Map database fields to our frontend structure
-            function mapStudents(students) {
-                return students.map(student => {
-                    // Determine year level based on the Year field
-                    let yearLabel;
-                    switch(student.Year) {
-                        case '1': yearLabel = '1st'; break;
-                        case '2': yearLabel = '2nd'; break;
-                        case '3': yearLabel = '3rd'; break;
-                        case '4': yearLabel = '4th'; break;
-                        case 1: yearLabel = '1st'; break;  // Handle non-string numbers
-                        case 2: yearLabel = '2nd'; break;
-                        case 3: yearLabel = '3rd'; break;
-                        case 4: yearLabel = '4th'; break;
-                        default: yearLabel = student.Year;
-                    }
-                    
-                    return {
-                        id: student.Student_ID,
-                        name: student.Name,
-                        year: yearLabel,
-                        course: student.College || 'CCS',
-                        email: student.Email || student.Name.toLowerCase().replace(/\s+/g, '.') + '@example.com',
-                        phone: student.Phone || '123-456-7890',
-                        status: student.Status || 'Active',
-                        attendance: parseInt(student.Attendance) || 0,
-                        gender: student.Gender
-                    };
-                });
-            }
-            
-            // Mapped student data
-            const mappedAllStudents = mapStudents(allStudents);
-            
-            // Display students
-            displayStudents(mappedAllStudents);
-            
-            // Set up modal functionality
-            setupModalHandlers();
-        };
+        // Initialize the students page
+        initializeStudentsPage();
     </script>
 <?php
+    exit();
 } else {
 ?>
 <!DOCTYPE html>
@@ -240,7 +180,7 @@ if ($isPartial) {
             </a>
             <a href="events.php" class="sidebar-link">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 icon">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5m-9-6h.008v.008H12v-.008zM12 15h.008v.008H12V15zm0 2.25h.008v.008H12v-.008zM9.75 15h.008v.008H9.75V15zm0 2.25h.008v.008H9.75v-.008zM7.5 15h.008v.008H7.5V15zm0 2.25h.008v.008H7.5v-.008zm6.75-4.5h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008V15zm0 2.25h.008v.008h-.008v-.008zm2.25-4.5h.008v.008H16.5v-.008zm0 2.25h.008H16.5V15z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5m-9-6h.008v.008H12v-.008zM12 15h.008v.008H12V15zm0 2.25h.008v.008H12v-.008zM9.75 15h.008v.008H9.75V15zm0 2.25h.008v.008H9.75v-.008zM7.5 15h.008v.008H7.5V15zm0 2.25h.008v.008H7.5v-.008zm6.75-4.5h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008V15zm0 2.25h.008v.008h-.008v-.008zm2.25-4.5h.008v.008h-.008v-.008zm0 2.25h.008H16.5V15z" />
                 </svg>
                 Events
             </a>
@@ -279,8 +219,16 @@ if ($isPartial) {
                     <span class="badge">1</span>
                 </div>
                 <button id="themeToggle" class="text-teal-light hover-teal transition-all">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" />
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
                     </svg>
                 </button>
                 <a href="#" class="text-light">
@@ -307,7 +255,7 @@ if ($isPartial) {
                 <div class="search-container w-full md:w-1/2 mb-4 md:mb-0">
                     <div class="relative">
                         <input type="text" id="searchInput" class="search-input w-full" placeholder="Search by name, ID, or course...">
-                        <button class="absolute right-3 top-1/2 transform -translate-y-1/2 text-teal-light" onclick="searchStudents()">
+                        <button class="absolute right-3 top-1/2 transform -translate-y-1/2 text-teal-light">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
                             </svg>
@@ -551,14 +499,14 @@ if ($isPartial) {
                         <p class="text-gray-300"><span class="text-gray-400">Attendance:</span> <span class="${attendanceClass}">${student.attendance} events</span></p>
                     </div>
                     <div class="mt-4 flex justify-between">
-                        <button class="text-teal-light hover:text-teal transition-colors flex items-center" onclick="viewDetails('${student.id}')">
+                        <button class="text-teal-light hover:text-teal transition-colors flex items-center" onclick="viewStudentDetails('${student.id}')">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-1">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                             </svg>
                             Details
                         </button>
-                        <button class="text-teal-light hover:text-teal transition-colors flex items-center" onclick="markAttendance('${student.id}')">
+                        <button class="text-teal-light hover:text-teal transition-colors flex items-center" onclick="markStudentAttendance('${student.id}')">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-1">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
@@ -571,382 +519,63 @@ if ($isPartial) {
         }
 
         // Function to show student details modal
-        function viewDetails(studentId) {
+        function viewStudentDetails(studentId) {
+            const student = mappedAllStudents.find(s => s.id === studentId);
+            if (student) {
                 const modal = document.getElementById('studentModal');
                 const modalContent = document.getElementById('modalContent');
                 
-            // Loading state
-                modalContent.innerHTML = `
-                <div class="text-center mb-6 py-8">
-                        <div class="inline-flex items-center justify-center h-16 w-16 rounded-full bg-teal-900/20 mb-4">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8 text-teal-light animate-spin">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
-                            </svg>
-                    </div>
-                    <h3 class="text-xl font-medium text-light">Loading Student Data...</h3>
-                </div>
-            `;
-            
-            modal.classList.remove('hidden');
-            
-            // Create form data for the AJAX request
-            const formData = new FormData();
-            formData.append('action', 'get');
-            formData.append('student_id', studentId);
-            
-            // Fetch student data
-            fetch('../includes/student_handler.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success && data.student) {
-                    const student = data.student;
-                    
-                    // Format student data for display
-                    const formattedStudent = {
-                        id: student.Student_ID,
-                        name: student.Name,
-                        year: student.Year,
-                        course: student.College || 'Not specified',
-                        gender: student.Gender,
-                        email: student.Email || 'Not specified',
-                        phone: student.Phone || 'Not specified',
-                        status: student.Status || 'Active',
-                        attendance: parseInt(student.Attendance) || 0
-                    };
-                    
-                    // Update modal content with student details
                     modalContent.innerHTML = `
                         <div class="flex items-start mb-8">
                             <div class="h-14 w-14 rounded-full bg-gradient-to-r from-teal-800 to-teal-700 flex items-center justify-center text-lg font-bold text-teal-light">
-                                ${formattedStudent.name.charAt(0)}${formattedStudent.name.split(' ')[1] ? formattedStudent.name.split(' ')[1].charAt(0) : ''}
+                            ${student.name.charAt(0)}${student.name.split(' ')[1] ? student.name.split(' ')[1].charAt(0) : ''}
                             </div>
                             <div class="ml-4">
-                                <h3 class="text-xl font-medium text-light">${formattedStudent.name}</h3>
+                            <h3 class="text-xl font-medium text-light">${student.name}</h3>
                                 <div class="flex items-center mt-1">
-                                    <span class="text-gray-400">${formattedStudent.id}</span>
+                                <span class="text-gray-400">${student.id}</span>
                                     <span class="mx-2 text-gray-600">•</span>
                                     <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-teal-900/30 text-teal-light">
-                                        ${formattedStudent.year} Year
+                                    ${student.year} Year
                                     </span>
                                 </div>
                             </div>
                         </div>
                         
-                        <div id="viewMode">
                             <div class="grid grid-cols-2 gap-4 mb-4">
                                 <div>
                                     <p class="text-gray-400 text-sm mb-1">Course</p>
-                                    <p class="text-light">${formattedStudent.course}</p>
+                            <p class="text-light">${student.course}</p>
                                 </div>
                                 <div>
                                     <p class="text-gray-400 text-sm mb-1">Gender</p>
-                                    <p class="text-light">${formattedStudent.gender === 'M' ? 'Male' : 'Female'}</p>
+                            <p class="text-light">${student.gender === 'M' ? 'Male' : 'Female'}</p>
                                 </div>
                                 <div>
                                     <p class="text-gray-400 text-sm mb-1">Email</p>
-                                    <p class="text-light">${formattedStudent.email}</p>
+                            <p class="text-light">${student.email}</p>
                                 </div>
                         <div>
                                     <p class="text-gray-400 text-sm mb-1">Phone</p>
-                                    <p class="text-light">${formattedStudent.phone}</p>
+                            <p class="text-light">${student.phone}</p>
                         </div>
                         <div>
                                     <p class="text-gray-400 text-sm mb-1">Status</p>
-                                    <p class="text-light">${formattedStudent.status}</p>
+                            <p class="text-light">${student.status}</p>
                         </div>
                         <div>
                                     <p class="text-gray-400 text-sm mb-1">Attendance</p>
-                                    <p class="text-light ${formattedStudent.attendance > 6 ? 'text-green-500' : formattedStudent.attendance < 3 ? 'text-red-500' : 'text-yellow-500'}">${formattedStudent.attendance} events</p>
-                                </div>
-                            </div>
-                            
-                            <div class="flex space-x-3 pt-4 border-t border-dark-4">
-                                <button id="editStudentBtn" class="flex-1 py-2 px-4 bg-teal-900 text-teal-light rounded-md hover:bg-teal-800 transition-colors font-bold mx-2">
-                                    Edit Details
-                                </button>
-                                <button id="deleteStudentBtn" class="flex-1 py-2 px-4 bg-red-900/70 text-red-300 rounded-md hover:bg-red-900 transition-colors font-bold mx-2">
-                                    Delete
-                                </button>
-                            </div>
-                            </div>
-                        </div>
-                        
-                        <div id="editMode" class="hidden">
-                            <div class="grid grid-cols-2 gap-4 mb-4">
-                                <div>
-                                    <label class="block text-sm text-gray-400 mb-1">Name</label>
-                                    <input type="text" id="editName" value="${formattedStudent.name}" class="w-full bg-dark-1 border border-dark-4 rounded-md px-3 py-2 text-light focus:outline-none focus:ring-1 focus:ring-teal-light">
-                                </div>
-                                <div>
-                                    <label class="block text-sm text-gray-400 mb-1">Year Level</label>
-                                    <select id="editYear" class="w-full bg-dark-1 border border-dark-4 rounded-md px-3 py-2 text-light focus:outline-none focus:ring-1 focus:ring-teal-light">
-                                        <option value="1" ${formattedStudent.year === '1st' ? 'selected' : ''}>1st Year</option>
-                                        <option value="2" ${formattedStudent.year === '2nd' ? 'selected' : ''}>2nd Year</option>
-                                        <option value="3" ${formattedStudent.year === '3rd' ? 'selected' : ''}>3rd Year</option>
-                                        <option value="4" ${formattedStudent.year === '4th' ? 'selected' : ''}>4th Year</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-sm text-gray-400 mb-1">Course</label>
-                                    <select id="editCourse" class="w-full bg-dark-1 border border-dark-4 rounded-md px-3 py-2 text-light focus:outline-none focus:ring-1 focus:ring-teal-light">
-                                        <option value="CCS" ${formattedStudent.course === 'CCS' ? 'selected' : ''}>CCS</option>
-                                        <option value="BSIT" ${formattedStudent.course === 'BSIT' ? 'selected' : ''}>BSIT</option>
-                                        <option value="BSCS" ${formattedStudent.course === 'BSCS' ? 'selected' : ''}>BSCS</option>
-                                        <option value="BSIS" ${formattedStudent.course === 'BSIS' ? 'selected' : ''}>BSIS</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-sm text-gray-400 mb-1">Email</label>
-                                    <input type="email" id="editEmail" value="${formattedStudent.email === 'Not specified' ? '' : formattedStudent.email}" class="w-full bg-dark-1 border border-dark-4 rounded-md px-3 py-2 text-light focus:outline-none focus:ring-1 focus:ring-teal-light">
-                        </div>
-                        <div>
-                                    <label class="block text-sm text-gray-400 mb-1">Phone</label>
-                                    <input type="text" id="editPhone" value="${formattedStudent.phone === 'Not specified' ? '' : formattedStudent.phone}" class="w-full bg-dark-1 border border-dark-4 rounded-md px-3 py-2 text-light focus:outline-none focus:ring-1 focus:ring-teal-light">
-                        </div>
-                        <div>
-                                    <label class="block text-sm text-gray-400 mb-1">Status</label>
-                                    <select id="editStatus" class="w-full bg-dark-1 border border-dark-4 rounded-md px-3 py-2 text-light focus:outline-none focus:ring-1 focus:ring-teal-light">
-                                        <option value="Active" ${formattedStudent.status === 'Active' ? 'selected' : ''}>Active</option>
-                                        <option value="Inactive" ${formattedStudent.status === 'Inactive' ? 'selected' : ''}>Inactive</option>
-                                        <option value="On Leave" ${formattedStudent.status === 'On Leave' ? 'selected' : ''}>On Leave</option>
-                                    </select>
-                        </div>
-                        <div>
-                                    <label class="block text-sm text-gray-400 mb-1">Attendance</label>
-                                    <input type="number" id="editAttendance" value="${formattedStudent.attendance}" min="0" max="10" class="w-full bg-dark-1 border border-dark-4 rounded-md px-3 py-2 text-light focus:outline-none focus:ring-1 focus:ring-teal-light">
-                                </div>
-                            </div>
-                            
-                            <div class="flex space-x-3 pt-4 border-t border-dark-4">
-                                <button id="cancelEditBtn" class="flex-1 py-2 px-4 bg-dark-3 text-light rounded-md hover:bg-dark-4 transition-colors font-bold">
-                                    Cancel
-                                </button>
-                                <button id="saveEditBtn" class="flex-1 py-2 px-4 bg-teal-900 text-teal-light rounded-md hover:bg-teal-800 transition-colors font-bold">
-                                    Save Changes
-                                </button>
+                            <p class="text-light ${student.attendance > 6 ? 'text-green-500' : student.attendance < 3 ? 'text-red-500' : 'text-yellow-500'}">${student.attendance} events</p>
                             </div>
                         </div>
                     `;
                     
-                    // Set up event listeners
-                    setTimeout(() => {
-                        // Edit mode toggle
-                        const editBtn = document.getElementById('editStudentBtn');
-                        const cancelBtn = document.getElementById('cancelEditBtn');
-                        const saveBtn = document.getElementById('saveEditBtn');
-                        const deleteBtn = document.getElementById('deleteStudentBtn');
-                        const viewMode = document.getElementById('viewMode');
-                        const editMode = document.getElementById('editMode');
-                        
-                        // Edit button click
-                        editBtn.addEventListener('click', () => {
-                            viewMode.classList.add('hidden');
-                            editMode.classList.remove('hidden');
-                        });
-                        
-                        // Cancel button click
-                        cancelBtn.addEventListener('click', () => {
-                            editMode.classList.add('hidden');
-                            viewMode.classList.remove('hidden');
-                        });
-                        
-                        // Save changes
-                        saveBtn.addEventListener('click', () => {
-                            // Get values from form
-                            const updatedName = document.getElementById('editName').value.trim();
-                            const updatedYear = document.getElementById('editYear').value;
-                            const updatedCourse = document.getElementById('editCourse').value;
-                            const updatedEmail = document.getElementById('editEmail').value.trim();
-                            const updatedPhone = document.getElementById('editPhone').value.trim();
-                            const updatedStatus = document.getElementById('editStatus').value;
-                            const updatedAttendance = parseInt(document.getElementById('editAttendance').value);
-                            
-                            // Create form data for the AJAX request
-                            const formData = new FormData();
-                            formData.append('action', 'update');
-                            formData.append('student_id', formattedStudent.id);
-                            formData.append('name', updatedName);
-                            formData.append('year', updatedYear);
-                            formData.append('college', updatedCourse);
-                            formData.append('gender', formattedStudent.gender); // Keep the original gender
-                            formData.append('email', updatedEmail);
-                            formData.append('phone', updatedPhone);
-                            formData.append('status', updatedStatus);
-                            formData.append('attendance', updatedAttendance);
-                            
-                            // Send AJAX request
-                            fetch('../includes/student_handler.php', {
-                                method: 'POST',
-                                body: formData
-                            })
-                            .then(response => response.json())
-                            .then(data => {
-                                if (data.success) {
-                                    // Show success message
-                                    modalContent.innerHTML = `
-                                        <div class="text-center mb-6">
-                                            <div class="inline-flex items-center justify-center h-16 w-16 rounded-full bg-green-900/20 mb-4">
-                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8 text-green-500">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                </svg>
-                                            </div>
-                                            <h3 class="text-xl font-medium text-light">Student Updated</h3>
-                                            <p class="text-gray-400">The student information has been successfully updated.</p>
-                                        </div>
-                                        
-                                        <button class="w-full py-2 px-4 bg-teal-900 text-teal-light rounded-md hover:bg-teal-800 transition-colors close-modal font-bold">
-                                            Close
-                                        </button>
-                                    `;
-                                    
-                                    // Add listener to new close button
-                                    document.querySelectorAll('.close-modal').forEach(button => {
-                                        button.addEventListener('click', () => {
-                                            modal.classList.add('hidden');
-                                            // Reload the page to refresh the student list
-                                            location.reload();
-                                        });
-                                    });
-                                    
-                                    // Auto-close after 3 seconds
-                                    setTimeout(() => {
-                                        if (!modal.classList.contains('hidden')) {
-                                            modal.classList.add('hidden');
-                                            // Reload the page to refresh the student list
-                                            location.reload();
-                                        }
-                                    }, 3000);
-                                } else {
-                                    alert(data.message || 'Error updating student. Please try again.');
-                                }
-                            })
-                            .catch(error => {
-                                console.error('Error:', error);
-                                alert('An error occurred. Please try again.');
-                            });
-                        });
-                        
-                        // Delete student
-                        deleteBtn.addEventListener('click', () => {
-                            if (confirm(`Are you sure you want to delete ${formattedStudent.name}?`)) {
-                                // Create form data for the AJAX request
-                                const formData = new FormData();
-                                formData.append('action', 'delete');
-                                formData.append('student_id', formattedStudent.id);
-                                
-                                // Send AJAX request
-                                fetch('../includes/student_handler.php', {
-                                    method: 'POST',
-                                    body: formData
-                                })
-                                .then(response => response.json())
-                                .then(data => {
-                                    if (data.success) {
-                                        // Show success message
-                                        modalContent.innerHTML = `
-                                            <div class="text-center mb-6">
-                                                <div class="inline-flex items-center justify-center h-16 w-16 rounded-full bg-red-900/20 mb-4">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8 text-red-500">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
-                                                    </svg>
-                                                </div>
-                                                <h3 class="text-xl font-medium text-light">Student Deleted</h3>
-                                                <p class="text-gray-400">The student has been successfully removed from the system.</p>
-                                            </div>
-                                            
-                                            <button class="w-full py-2 px-4 bg-teal-900 text-teal-light rounded-md hover:bg-teal-800 transition-colors close-modal font-bold">
-                                                Close
-                                            </button>
-                                        `;
-                                        
-                                        // Add listener to new close button
-                                        document.querySelectorAll('.close-modal').forEach(button => {
-                                            button.addEventListener('click', () => {
-                                                modal.classList.add('hidden');
-                                                // Reload the page to refresh the student list
-                                                location.reload();
-                                            });
-                                        });
-                                        
-                                        // Auto-close after 3 seconds
-                                        setTimeout(() => {
-                                            if (!modal.classList.contains('hidden')) {
-                                                modal.classList.add('hidden');
-                                                // Reload the page to refresh the student list
-                                                location.reload();
-                                            }
-                                        }, 3000);
-                                    } else {
-                                        alert(data.message || 'Error deleting student. Please try again.');
-                                    }
-                                })
-                                .catch(error => {
-                                    console.error('Error:', error);
-                                    alert('An error occurred. Please try again.');
-                                });
-                            }
-                        });
-                    }, 0);
-                    
-                } else {
-                    // Show error message if student not found
-                    modalContent.innerHTML = `
-                        <div class="text-center mb-6">
-                            <div class="inline-flex items-center justify-center h-16 w-16 rounded-full bg-red-900/20 mb-4">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8 text-red-500">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-                                </svg>
-                            </div>
-                            <h3 class="text-xl font-medium text-light">Student Not Found</h3>
-                            <p class="text-gray-400">The requested student information could not be found.</p>
-                        </div>
-                        
-                        <button class="w-full py-2 px-4 bg-teal-900 text-teal-light rounded-md hover:bg-teal-800 transition-colors close-modal font-bold">
-                            Close
-                        </button>
-                    `;
-                    
-                    // Add listener to close button
-                    document.querySelectorAll('.close-modal').forEach(button => {
-                        button.addEventListener('click', () => {
-                            modal.classList.add('hidden');
-                        });
-                    });
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                // Show error message
-                modalContent.innerHTML = `
-                    <div class="text-center mb-6">
-                        <div class="inline-flex items-center justify-center h-16 w-16 rounded-full bg-red-900/20 mb-4">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8 text-red-500">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-                            </svg>
-                        </div>
-                        <h3 class="text-xl font-medium text-light">Error Loading Data</h3>
-                        <p class="text-gray-400">There was a problem retrieving the student information.</p>
-                    </div>
-                    
-                    <button class="w-full py-2 px-4 bg-teal-900 text-teal-light rounded-md hover:bg-teal-800 transition-colors close-modal font-bold">
-                        Close
-                    </button>
-                `;
-                
-                // Add listener to close button
-                document.querySelectorAll('.close-modal').forEach(button => {
-                    button.addEventListener('click', () => {
-                        modal.classList.add('hidden');
-                    });
-                });
-            });
+                modal.classList.remove('hidden');
+            }
         }
 
         // Mark attendance for a student
-        function markAttendance(studentId) {
+        function markStudentAttendance(studentId) {
             const student = mappedAllStudents.find(s => s.id === studentId);
             if (student) {
                 const modal = document.getElementById('studentModal');
@@ -1000,7 +629,7 @@ if ($isPartial) {
                         <button class="flex-1 py-2 px-4 bg-dark-3 text-light rounded-md hover:bg-dark-4 transition-colors close-modal">
                             Cancel
                         </button>
-                        <button class="flex-1 py-2 px-4 bg-teal-900 text-teal-light rounded-md hover:bg-teal-800 transition-colors" onclick="saveAttendance('${studentId}')">
+                        <button class="flex-1 py-2 px-4 bg-teal-900 text-teal-light rounded-md hover:bg-teal-800 transition-colors" onclick="saveStudentAttendance('${studentId}')">
                             Save
                         </button>
                     </div>
@@ -1011,7 +640,7 @@ if ($isPartial) {
         }
         
         // Save attendance (demo function)
-        function saveAttendance(studentId) {
+        function saveStudentAttendance(studentId) {
             const modal = document.getElementById('studentModal');
             const modalContent = document.getElementById('modalContent');
             
