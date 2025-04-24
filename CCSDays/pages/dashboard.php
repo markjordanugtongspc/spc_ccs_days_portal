@@ -32,6 +32,28 @@ $userInitials = strtoupper(substr($userName, 0, 1)) . (strpos($userName, ' ') !=
 		<link rel="stylesheet" href="../styles.css">
 		<link rel="stylesheet" href="./css/common.css">
 		<link rel="stylesheet" href="./css/dashboard.css">
+		<!-- SweetAlert2 -->
+		<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+		<style>
+			/* Status badge styles for SweetAlert2 */
+			.swal2-html-container .status-badge {
+				font-size: 0.75rem;
+				padding: 0.125rem 0.5rem;
+				border-radius: 9999px;
+				font-weight: 500;
+				display: inline-block;
+			}
+			
+			.swal2-html-container .status-badge.approved {
+				background-color: rgba(16, 185, 129, 0.1);
+				color: #10b981;
+			}
+			
+			.swal2-html-container .status-badge.pending {
+				background-color: rgba(245, 158, 11, 0.1);
+				color: #f59e0b;
+			}
+		</style>
 	</head>
 	<body class="bg-dark-1 text-light">
 		<!-- Sidebar -->
@@ -212,58 +234,18 @@ $userInitials = strtoupper(substr($userName, 0, 1)) . (strpos($userName, ' ') !=
 										Upcoming Events
 									</div>
 									
-									<div class="visit-item">
-										<div class="visit-details">
-											<div class="visitor-name">
-												Programming Competition
-												<span class="status-badge approved">approved</span>
-											</div>
-											<div class="visit-info">Venue: CCS Laboratory</div>
-											<div class="visit-time">
-												<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 icon">
-													<path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-												</svg>
-												2023-04-19 • 10:00 AM
-											</div>
+									<div id="upcomingEventsContainer">
+										<!-- Loading indicator -->
+										<div class="flex justify-center items-center p-4">
+											<svg class="animate-spin -ml-1 mr-3 h-8 w-8 text-teal-light" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+												<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+												<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+											</svg>
+											<span>Loading events...</span>
 										</div>
-										<button class="action-button">Details</button>
 									</div>
 									
-									<div class="visit-item">
-										<div class="visit-details">
-											<div class="visitor-name">
-												Web Development Workshop
-												<span class="status-badge pending">pending</span>
-											</div>
-											<div class="visit-info">Venue: Multi-Purpose Hall</div>
-											<div class="visit-time">
-												<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 icon">
-													<path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-												</svg>
-												2023-04-19 • 2:30 PM
-											</div>
-										</div>
-										<button class="action-button">Details</button>
-									</div>
-									
-									<div class="visit-item">
-										<div class="visit-details">
-											<div class="visitor-name">
-												Industry Talk: AI Trends
-												<span class="status-badge approved">approved</span>
-											</div>
-											<div class="visit-info">Venue: AVR Room</div>
-											<div class="visit-time">
-												<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 icon">
-													<path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-												</svg>
-												2023-04-20 • 11:15 AM
-											</div>
-										</div>
-										<button class="action-button">Details</button>
-									</div>
-									
-									<a href="#" class="view-all">View All Events</a>
+									<a href="events.php" class="view-all">View All Events</a>
 								</div>
 								
 								<div class="quick-actions">
@@ -271,8 +253,8 @@ $userInitials = strtoupper(substr($userName, 0, 1)) . (strpos($userName, ' ') !=
 										Quick Actions
 									</div>
 									<div class="grid grid-cols-2 gap-4">
-										<button class="action-button">Add New Event</button>
-										<button class="action-button">Approve Registrations</button>
+										<button id="addEventBtn" class="action-button">Add New Event</button>
+										<button id="approveEventsBtn" class="action-button">Approve Events</button>
 										<button class="action-button">Generate Reports</button>
 										<button class="action-button">Manage Users</button>
 									</div>

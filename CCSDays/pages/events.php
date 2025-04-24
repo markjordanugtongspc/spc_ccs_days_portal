@@ -211,6 +211,8 @@ if ($isPartial) {
     <link rel="stylesheet" href="../styles.css">
     <link rel="stylesheet" href="./css/common.css">
     <link rel="stylesheet" href="./css/dashboard.css">
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body class="bg-dark-1 text-light">
     <!-- Sidebar -->

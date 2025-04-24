@@ -1,4 +1,9 @@
 document.addEventListener('DOMContentLoaded', function () {
+    // Load upcoming events if on dashboard page
+    const upcomingEventsContainer = document.getElementById('upcomingEventsContainer');
+    if (upcomingEventsContainer) {
+        loadUpcomingEvents();
+    }
     // Form elements
     const loginForm = document.getElementById('loginForm');
     const emailInput = document.getElementById('email');
@@ -251,6 +256,9 @@ document.addEventListener('DOMContentLoaded', function () {
             clearInterval(dashboardRefreshInterval);
         }
         
+        // Initial load of upcoming events
+        loadUpcomingEvents();
+        
         dashboardRefreshInterval = setInterval(() => {
             const activeTab = document.querySelector('.tab-item.active');
             if (activeTab && activeTab.getAttribute('data-tab') === 'dashboard') {
@@ -262,6 +270,129 @@ document.addEventListener('DOMContentLoaded', function () {
     // Function to refresh dashboard statistics
     function refreshDashboardStats() {
         updatePhilippinesTime();
+        loadUpcomingEvents();
+    }
+    
+    // Function to load upcoming events
+    function loadUpcomingEvents() {
+        const eventsContainer = document.getElementById('upcomingEventsContainer');
+        if (!eventsContainer) return;
+        
+        fetch('../includes/api/fetch_upcoming_events.php')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.events.length > 0) {
+                    // Clear loading indicator
+                    eventsContainer.innerHTML = '';
+                    
+                    // Add events to container
+                    data.events.forEach(event => {
+                        const eventElement = document.createElement('div');
+                        eventElement.className = 'visit-item';
+                        eventElement.innerHTML = `
+                            <div class="visit-details">
+                                <div class="visitor-name">
+                                    ${event.name}
+                                    <span class="status-badge ${event.status}">${event.status}</span>
+                                </div>
+                                <div class="visit-info">Venue: ${event.venue}</div>
+                                <div class="visit-time">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 icon">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    ${event.formatted_date}
+                                </div>
+                            </div>
+                            <button class="action-button view-event-details" data-id="${event.id}">Details</button>
+                        `;
+                        eventsContainer.appendChild(eventElement);
+                    });
+                    
+                    // Add event listeners to detail buttons
+                    document.querySelectorAll('.view-event-details').forEach(button => {
+                        button.addEventListener('click', function() {
+                            const eventId = this.getAttribute('data-id');
+                            viewEventDetails(eventId);
+                        });
+                    });
+                } else {
+                    eventsContainer.innerHTML = `
+                        <div class="text-center p-4 text-gray-400">
+                            No upcoming events found. <a href="events.php" class="text-teal-light hover:underline">Create an event</a>
+                        </div>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('Error loading upcoming events:', error);
+                eventsContainer.innerHTML = `
+                    <div class="text-center p-4 text-red-500">
+                        Error loading events. Please try again.
+                    </div>
+                `;
+            });
+    }
+    
+    // Function to view event details
+    function viewEventDetails(eventId) {
+        // Fetch event details
+        fetch(`../includes/api/events_api.php?id=${eventId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.data.length > 0) {
+                    const event = data.data[0];
+                    
+                    // Format date for display
+                    const dateObj = new Date(event.event_date);
+                    const formattedDate = dateObj.toLocaleDateString() + ' • ' +
+                                         dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    
+                    // Determine reminder status
+                    const reminderStatus = event.reminder_enabled == 1 ? 'Active' : 'Not set';
+                    
+                    // Show event details in SweetAlert2
+                    Swal.fire({
+                        title: event.name,
+                        html: `
+                            <div class="text-left">
+                                <p class="mb-2"><strong>Date & Time:</strong> ${formattedDate}</p>
+                                <p class="mb-2"><strong>Venue:</strong> ${event.venue}</p>
+                                <p class="mb-2"><strong>Status:</strong> <span class="status-badge ${event.status}">${event.status}</span></p>
+                                <p class="mb-2"><strong>Reminder:</strong> ${reminderStatus}</p>
+                                <p class="mb-4"><strong>Description:</strong></p>
+                                <p class="text-gray-300">${event.description || 'No description provided.'}</p>
+                            </div>
+                        `,
+                        confirmButtonText: 'Close',
+                        confirmButtonColor: '#14b8a6', // teal-light color
+                        background: '#1e293b', // dark-2 color
+                        color: '#f8fafc' // light color
+                    });
+                } else {
+                    // Show error message
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Failed to load event details',
+                        confirmButtonColor: '#14b8a6', // teal-light color
+                        background: '#1e293b', // dark-2 color
+                        color: '#f8fafc' // light color
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching event details:', error);
+                
+                // Show error message
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Failed to load event details. Please try again.',
+                    confirmButtonColor: '#14b8a6', // teal-light color
+                    background: '#1e293b', // dark-2 color
+                    color: '#f8fafc' // light color
+                });
+            });
     }
     
     // Function to load dashboard content
@@ -273,6 +404,41 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('tab-content').appendChild(content);
             content.classList.add('active');
             content.style.display = 'block';
+            
+            // Load upcoming events
+            loadUpcomingEvents();
+            
+            // Set up quick action buttons
+            setupQuickActionButtons();
+        }
+    }
+    
+    // Function to set up quick action buttons
+    function setupQuickActionButtons() {
+        const addEventBtn = document.getElementById('addEventBtn');
+        if (addEventBtn) {
+            addEventBtn.addEventListener('click', function() {
+                // Check if we're already on the events page
+                if (window.location.pathname.includes('events.php')) {
+                    // If we have the createEventModal, open it
+                    const createEventModal = document.getElementById('createEventModal');
+                    if (createEventModal) {
+                        createEventModal.classList.remove('hidden');
+                    } else {
+                        window.location.href = 'events.php';
+                    }
+                } else {
+                    // Navigate to events page
+                    window.location.href = 'events.php';
+                }
+            });
+        }
+        
+        const approveEventsBtn = document.getElementById('approveEventsBtn');
+        if (approveEventsBtn) {
+            approveEventsBtn.addEventListener('click', function() {
+                window.location.href = 'events.php';
+            });
         }
     }
     

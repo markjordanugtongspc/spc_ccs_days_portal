@@ -1,4 +1,53 @@
 document.addEventListener('DOMContentLoaded', function() {
+    // SweetAlert2 custom functions
+    const Toast = Swal.mixin({
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+        didOpen: (toast) => {
+            toast.addEventListener('mouseenter', Swal.stopTimer)
+            toast.addEventListener('mouseleave', Swal.resumeTimer)
+        }
+    });
+    
+    function showSuccessAlert(title, text = '') {
+        return Swal.fire({
+            icon: 'success',
+            title: title,
+            text: text,
+            confirmButtonColor: '#14b8a6', // teal-light color
+            background: '#1e293b', // dark-2 color
+            color: '#f8fafc' // light color
+        });
+    }
+    
+    function showErrorAlert(title, text = '') {
+        return Swal.fire({
+            icon: 'error',
+            title: title,
+            text: text,
+            confirmButtonColor: '#14b8a6', // teal-light color
+            background: '#1e293b', // dark-2 color
+            color: '#f8fafc' // light color
+        });
+    }
+    
+    function showConfirmAlert(title, text = '', confirmButtonText = 'Yes', cancelButtonText = 'No') {
+        return Swal.fire({
+            icon: 'question',
+            title: title,
+            text: text,
+            showCancelButton: true,
+            confirmButtonColor: '#14b8a6', // teal-light color
+            cancelButtonColor: '#475569', // gray-600 color
+            confirmButtonText: confirmButtonText,
+            cancelButtonText: cancelButtonText,
+            background: '#1e293b', // dark-2 color
+            color: '#f8fafc' // light color
+        });
+    }
     // DOM elements
     const createEventBtn = document.getElementById('createEventBtn');
     const pendingEventsBtn = document.getElementById('pendingEventsBtn');
@@ -65,17 +114,17 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Validate required fields
             if (!eventName) {
-                alert('Please enter an event name');
+                showErrorAlert('Missing Information', 'Please enter an event name');
                 return;
             }
             
             if (!eventDate) {
-                alert('Please select a date and time');
+                showErrorAlert('Missing Information', 'Please select a date and time');
                 return;
             }
             
             if (!eventVenue) {
-                alert('Please enter a venue');
+                showErrorAlert('Missing Information', 'Please enter a venue');
                 return;
             }
             
@@ -137,18 +186,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 createEventForm.reset();
                 
                 // Show success message
-                alert('Event created successfully! Waiting for approval.');
-                
-                // Reload the page to show the new event
-                window.location.reload();
+                showSuccessAlert('Success!', 'Event created successfully! Waiting for approval.')
+                .then(() => {
+                    // Reload the page to show the new event
+                    window.location.reload();
+                });
             } else {
                 console.error('API Error:', data);
-                alert('Error: ' + (data.error || 'Failed to create event'));
+                showErrorAlert('Error', data.error || 'Failed to create event');
             }
         })
         .catch(error => {
             console.error('Error creating event:', error);
-            alert('Failed to create event. Please try again. Error: ' + error.message);
+            showErrorAlert('Error', 'Failed to create event. Please try again. Error: ' + error.message);
         })
         .finally(() => {
             // Reset button state
@@ -180,17 +230,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 createEventForm.reset();
                 
                 // Show success message
-                alert('Event updated successfully!');
-                
-                // Reload the page to show the updated event
-                window.location.reload();
+                showSuccessAlert('Success!', 'Event updated successfully!')
+                .then(() => {
+                    // Reload the page to show the updated event
+                    window.location.reload();
+                });
             } else {
-                alert('Error: ' + (data.error || 'Failed to update event'));
+                showErrorAlert('Error', data.error || 'Failed to update event');
             }
         })
         .catch(error => {
             console.error('Error updating event:', error);
-            alert('Failed to update event. Please try again.');
+            showErrorAlert('Error', 'Failed to update event. Please try again.');
         })
         .finally(() => {
             // Reset button state
@@ -200,7 +251,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function approveEvent(eventId) {
-        if (confirm('Are you sure you want to approve this event?')) {
+        showConfirmAlert('Approve Event', 'Are you sure you want to approve this event?', 'Yes, Approve', 'Cancel')
+        .then((result) => {
+            if (result.isConfirmed) {
             // Prepare data
             const eventData = {
                 id: eventId,
@@ -219,23 +272,27 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(data => {
                 if (data.success) {
                     // Show success message
-                    alert('Event approved successfully!');
-                    
-                    // Reload the page to show the updated status
-                    window.location.reload();
+                    showSuccessAlert('Success!', 'Event approved successfully!')
+                    .then(() => {
+                        // Reload the page to show the updated status
+                        window.location.reload();
+                    });
                 } else {
-                    alert('Error: ' + (data.error || 'Failed to approve event'));
+                    showErrorAlert('Error', data.error || 'Failed to approve event');
                 }
             })
             .catch(error => {
                 console.error('Error approving event:', error);
-                alert('Failed to approve event. Please try again.');
+                showErrorAlert('Error', 'Failed to approve event. Please try again.');
             });
-        }
+            }
+        });
     }
     
     function deleteEvent(eventId) {
-        if (confirm('Are you sure you want to delete this event? This action cannot be undone.')) {
+        showConfirmAlert('Delete Event', 'Are you sure you want to delete this event? This action cannot be undone.', 'Yes, Delete', 'Cancel')
+        .then((result) => {
+            if (result.isConfirmed) {
             // Prepare data
             const eventData = {
                 id: eventId
@@ -253,19 +310,21 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(data => {
                 if (data.success) {
                     // Show success message
-                    alert('Event deleted successfully!');
-                    
-                    // Reload the page to update the list
-                    window.location.reload();
+                    showSuccessAlert('Success!', 'Event deleted successfully!')
+                    .then(() => {
+                        // Reload the page to update the list
+                        window.location.reload();
+                    });
                 } else {
-                    alert('Error: ' + (data.error || 'Failed to delete event'));
+                    showErrorAlert('Error', data.error || 'Failed to delete event');
                 }
             })
             .catch(error => {
                 console.error('Error deleting event:', error);
-                alert('Failed to delete event. Please try again.');
+                showErrorAlert('Error', 'Failed to delete event. Please try again.');
             });
-        }
+            }
+        });
     }
     
     function viewEvent(eventId) {
@@ -306,12 +365,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 viewEventModal.classList.remove('hidden');
             } else {
-                alert('Error: Failed to load event details');
+                showErrorAlert('Error', 'Failed to load event details');
             }
         })
         .catch(error => {
             console.error('Error fetching event details:', error);
-            alert('Failed to load event details. Please try again.');
+            showErrorAlert('Error', 'Failed to load event details. Please try again.');
         });
     }
     
@@ -356,12 +415,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Show the modal
                 createEventModal.classList.remove('hidden');
             } else {
-                alert('Error: Failed to load event details for editing');
+                showErrorAlert('Error', 'Failed to load event details for editing');
             }
         })
         .catch(error => {
             console.error('Error fetching event details for editing:', error);
-            alert('Failed to load event details. Please try again.');
+            showErrorAlert('Error', 'Failed to load event details. Please try again.');
         });
     }
 
