@@ -397,16 +397,16 @@ document.addEventListener('DOMContentLoaded', function () {
                                         <p class="text-gray-300"><span class="text-gray-400">Course:</span> ${student.College || 'CCS'}</p>
                                         <p class="text-gray-300"><span class="text-gray-400">Attendance:</span> <span class="${attendanceClass}">${attendance} events</span></p>
                                     </div>
-                                    <div class="mt-4 flex justify-between">
-                                        <button class="text-teal-light hover:text-teal transition-colors flex items-center view-student" data-id="${student.Student_ID}">
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-1">
+                                    <div class="mt-4 flex justify-between space-x-4">
+                                        <button class="flex-1 px-3 py-2 rounded-md bg-dark-3 hover:bg-dark-4 text-teal-light hover:text-teal transition-all duration-200 flex items-center justify-center group view-student" data-id="${student.Student_ID}">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-1.5 group-hover:scale-110 transition-transform">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                             </svg>
                                             Details
                                         </button>
-                                        <button class="text-teal-light hover:text-teal transition-colors flex items-center mark-attendance" data-id="${student.Student_ID}">
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-1">
+                                        <button class="flex-1 px-3 py-2 rounded-md bg-dark-3 hover:bg-dark-4 text-teal-light hover:text-teal transition-all duration-200 flex items-center justify-center group mark-attendance" data-id="${student.Student_ID}">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-1.5 group-hover:scale-110 transition-transform">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                             </svg>
                                             Attendance
@@ -467,348 +467,62 @@ document.addEventListener('DOMContentLoaded', function () {
                             const modal = document.getElementById('studentModal');
                             const modalContent = document.getElementById('studentModalContent');
                             
-                            let badgeClass;
-                            switch (student.Status) {
-                                case 'Active':
-                                    badgeClass = 'bg-green-800 text-green-200';
-                                    break;
-                                case 'Inactive':
-                                    badgeClass = 'bg-gray-800 text-gray-200';
-                                    break;
-                                case 'Alumni':
-                                    badgeClass = 'bg-blue-800 text-blue-200';
-                                    break;
-                                default:
-                                    badgeClass = 'bg-gray-800 text-gray-200';
-                            }
+                            // Create initials
+                            const names = student.Name.split(' ');
+                            const initials = names[0].charAt(0) + (names.length > 1 ? names[names.length - 1].charAt(0) : '');
                             
-                            let attendanceBadge;
-                            if (student.Attendance === '100%') {
-                                attendanceBadge = 'bg-green-800 text-green-200';
-                            } else if (student.Attendance === '0%') {
-                                attendanceBadge = 'bg-red-800 text-red-200';
-                            } else {
-                                attendanceBadge = 'bg-yellow-800 text-yellow-200';
-                            }
+                            // Determine attendance class
+                            const attendance = parseInt(student.Attendance) || 0;
+                            let attendanceClass = '';
+                            if (attendance > 6) attendanceClass = 'text-green-500';
+                            else if (attendance < 3) attendanceClass = 'text-red-500';
+                            else attendanceClass = 'text-yellow-500';
                             
                             modalContent.innerHTML = `
-                                <div class="flex justify-between items-start mb-4">
-                                    <div>
+                                <div class="flex items-start mb-4">
+                                    <div class="h-12 w-12 rounded-full bg-teal-900/30 flex items-center justify-center text-lg font-bold text-teal-light">
+                                        ${initials}
+                                    </div>
+                                    <div class="ml-4">
                                         <h3 class="text-xl font-medium text-light">${student.Name}</h3>
-                                        <p class="text-gray-400">${student.Student_ID}</p>
-                                    </div>
-                                    <span class="px-2 py-1 text-sm rounded ${badgeClass}">${student.Status}</span>
-                                </div>
-                                
-                                <div class="grid grid-cols-2 gap-4 mb-6">
-                                    <div>
-                                        <p class="text-sm text-gray-400">Year Level</p>
-                                        <p class="text-light">${student.Year_Level}</p>
-                                    </div>
-                                    <div>
-                                        <p class="text-sm text-gray-400">Course</p>
-                                        <p class="text-light">${student.Course}</p>
-                                    </div>
-                                    <div>
-                                        <p class="text-sm text-gray-400">Gender</p>
-                                        <p class="text-light">${student.Gender}</p>
-                                    </div>
-                                    <div>
-                                        <p class="text-sm text-gray-400">Attendance</p>
-                                        <p class="inline-block px-2 py-1 text-sm rounded ${attendanceBadge}">${student.Attendance}</p>
-                                    </div>
-                                    <div>
-                                        <p class="text-sm text-gray-400">Email</p>
-                                        <p class="text-light">${student.Email}</p>
-                                    </div>
-                                    <div>
-                                        <p class="text-sm text-gray-400">Phone</p>
-                                        <p class="text-light">${student.Phone || 'N/A'}</p>
+                                        <div class="flex items-center mt-1">
+                                            <span class="text-gray-400">${student.Student_ID}</span>
+                                        </div>
                                     </div>
                                 </div>
                                 
-                                <div class="flex space-x-3">
-                                    <button class="flex-1 py-2 px-4 bg-dark-3 text-light rounded hover:bg-dark-4 transition-colors close-modal">
-                                        Close
-                                    </button>
-                                    <button class="flex-1 py-2 px-4 bg-teal text-dark rounded hover:bg-teal-light transition-colors mark-attendance" data-id="${student.Student_ID}">
-                                        Mark Attendance
-                                    </button>
-                                    <button class="flex-1 py-2 px-4 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors edit-student" data-id="${student.Student_ID}">
-                                        Edit
-                                    </button>
-                                    <button class="flex-1 py-2 px-4 bg-red-600 text-white rounded hover:bg-red-700 transition-colors delete-student" data-id="${student.Student_ID}">
-                                        Delete
-                                    </button>
+                                <div class="grid grid-cols-2 gap-4 mb-4 text-sm">
+                                    <div>
+                                        <p class="text-gray-400 mb-1">Year Level</p>
+                                        <p class="text-light">${student.Year} Year</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-gray-400 mb-1">Course</p>
+                                        <p class="text-light">${student.College || 'CCS'}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-gray-400 mb-1">Gender</p>
+                                        <p class="text-light">${student.Gender === 'M' ? 'Male' : 'Female'}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-gray-400 mb-1">Attendance</p>
+                                        <p class="text-light ${attendanceClass}">${attendance} events</p>
+                                    </div>
                                 </div>
                             `;
                             
                             modal.classList.remove('hidden');
                             
-                            // Close modal when clicking close button
+                            // Set up modal close
                             document.querySelectorAll('.close-modal').forEach(button => {
                                 button.addEventListener('click', function() {
                                     modal.classList.add('hidden');
-                                });
-                            });
-                            
-                            // Mark attendance button
-                            document.querySelectorAll('.mark-attendance').forEach(button => {
-                                button.addEventListener('click', function() {
-                                    const studentId = this.getAttribute('data-id');
-                                    markStudentAttendance(studentId);
-                                });
-                            });
-                            
-                            // Edit student button
-                            document.querySelectorAll('.edit-student').forEach(button => {
-                                button.addEventListener('click', function() {
-                                    const studentId = this.getAttribute('data-id');
-                                    editStudentDetails(student);
-                                });
-                            });
-                            
-                            // Delete student button
-                            document.querySelectorAll('.delete-student').forEach(button => {
-                                button.addEventListener('click', function() {
-                                    const studentId = this.getAttribute('data-id');
-                                    deleteStudentConfirm(student);
                                 });
                             });
                         })
                         .catch(error => {
                             console.error('Error fetching student details:', error);
                         });
-                }
-                
-                // Edit student details modal
-                function editStudentDetails(student) {
-                    const modal = document.getElementById('studentModal');
-                    const modalContent = document.getElementById('studentModalContent');
-                    
-                    modalContent.innerHTML = `
-                        <div class="text-center mb-4">
-                            <h3 class="text-xl font-medium text-light">Edit Student</h3>
-                            <p class="text-gray-400">ID: ${student.Student_ID}</p>
-                        </div>
-                        
-                        <form id="editStudentForm" class="space-y-4">
-                            <input type="hidden" id="editStudentId" value="${student.Student_ID}">
-                            
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-sm text-gray-400 mb-1" for="editName">Name</label>
-                                    <input type="text" id="editName" class="w-full bg-dark-1 border border-gray-700 rounded px-3 py-2 text-light focus:outline-none focus:ring-1 focus:ring-teal-light" value="${student.Name}">
-                                </div>
-                                <div>
-                                    <label class="block text-sm text-gray-400 mb-1" for="editYear">Year Level</label>
-                                    <select id="editYear" class="w-full bg-dark-1 border border-gray-700 rounded px-3 py-2 text-light focus:outline-none focus:ring-1 focus:ring-teal-light">
-                                        <option value="1" ${student.Year === '1' ? 'selected' : ''}>1st Year</option>
-                                        <option value="2" ${student.Year === '2' ? 'selected' : ''}>2nd Year</option>
-                                        <option value="3" ${student.Year === '3' ? 'selected' : ''}>3rd Year</option>
-                                        <option value="4" ${student.Year === '4' ? 'selected' : ''}>4th Year</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-sm text-gray-400 mb-1" for="editCollege">Course</label>
-                                    <input type="text" id="editCollege" class="w-full bg-dark-1 border border-gray-700 rounded px-3 py-2 text-light focus:outline-none focus:ring-1 focus:ring-teal-light" value="${student.College || 'CCS'}">
-                                </div>
-                                <div>
-                                    <label class="block text-sm text-gray-400 mb-1" for="editGender">Gender</label>
-                                    <select id="editGender" class="w-full bg-dark-1 border border-gray-700 rounded px-3 py-2 text-light focus:outline-none focus:ring-1 focus:ring-teal-light">
-                                        <option value="M" ${student.Gender === 'M' ? 'selected' : ''}>Male</option>
-                                        <option value="F" ${student.Gender === 'F' ? 'selected' : ''}>Female</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-sm text-gray-400 mb-1" for="editEmail">Email</label>
-                                    <input type="email" id="editEmail" class="w-full bg-dark-1 border border-gray-700 rounded px-3 py-2 text-light focus:outline-none focus:ring-1 focus:ring-teal-light" value="${student.Email || ''}">
-                                </div>
-                                <div>
-                                    <label class="block text-sm text-gray-400 mb-1" for="editPhone">Phone</label>
-                                    <input type="tel" id="editPhone" class="w-full bg-dark-1 border border-gray-700 rounded px-3 py-2 text-light focus:outline-none focus:ring-1 focus:ring-teal-light" value="${student.Phone || ''}">
-                                </div>
-                                <div>
-                                    <label class="block text-sm text-gray-400 mb-1" for="editStatus">Status</label>
-                                    <select id="editStatus" class="w-full bg-dark-1 border border-gray-700 rounded px-3 py-2 text-light focus:outline-none focus:ring-1 focus:ring-teal-light">
-                                        <option value="Active" ${student.Status === 'Active' ? 'selected' : ''}>Active</option>
-                                        <option value="Inactive" ${student.Status === 'Inactive' ? 'selected' : ''}>Inactive</option>
-                                        <option value="On Leave" ${student.Status === 'On Leave' ? 'selected' : ''}>On Leave</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-sm text-gray-400 mb-1" for="editAttendance">Attendance</label>
-                                    <input type="number" id="editAttendance" min="0" class="w-full bg-dark-1 border border-gray-700 rounded px-3 py-2 text-light focus:outline-none focus:ring-1 focus:ring-teal-light" value="${student.Attendance || 0}">
-                                </div>
-                            </div>
-                            
-                            <div class="flex space-x-3 mt-6">
-                                <button type="button" class="flex-1 py-2 px-4 bg-dark-3 text-light rounded hover:bg-dark-4 transition-colors back-to-details" data-id="${student.Student_ID}">
-                                    Cancel
-                                </button>
-                                <button type="submit" class="flex-1 py-2 px-4 bg-teal text-dark rounded hover:bg-teal-light transition-colors">
-                                    Save Changes
-                                </button>
-                            </div>
-                        </form>
-                    `;
-                    
-                    // Back to details button
-                    document.querySelectorAll('.back-to-details').forEach(button => {
-                        button.addEventListener('click', function() {
-                            const studentId = this.getAttribute('data-id');
-                            viewStudentDetails(studentId);
-                        });
-                    });
-                    
-                    // Handle form submission
-                    const editForm = document.getElementById('editStudentForm');
-                    editForm.addEventListener('submit', function(e) {
-                        e.preventDefault();
-                        
-                        // Get values from form
-                        const studentId = document.getElementById('editStudentId').value;
-                        const name = document.getElementById('editName').value;
-                        const year = document.getElementById('editYear').value;
-                        const college = document.getElementById('editCollege').value;
-                        const gender = document.getElementById('editGender').value;
-                        const email = document.getElementById('editEmail').value;
-                        const phone = document.getElementById('editPhone').value;
-                        const status = document.getElementById('editStatus').value;
-                        const attendance = document.getElementById('editAttendance').value;
-                        
-                        // Create form data
-                        const formData = new FormData();
-                        formData.append('action', 'update');
-                        formData.append('student_id', studentId);
-                        formData.append('name', name);
-                        formData.append('year', year);
-                        formData.append('college', college);
-                        formData.append('gender', gender);
-                        formData.append('email', email);
-                        formData.append('phone', phone);
-                        formData.append('status', status);
-                        formData.append('attendance', attendance);
-                        
-                        // Send AJAX request
-                        fetch('../includes/student_handler.php', {
-                            method: 'POST',
-                            body: formData
-                        })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                // Show success message
-                                modalContent.innerHTML = `
-                                    <div class="text-center">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-green-500 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                        </svg>
-                                        <h3 class="text-lg font-medium text-light mb-2">Student Updated</h3>
-                                        <p class="text-gray-400 mb-4">The student information has been updated successfully.</p>
-                                        <div class="flex space-x-3">
-                                            <button class="flex-1 py-2 px-4 bg-dark-3 text-light rounded hover:bg-dark-4 transition-colors close-modal">
-                                                Close
-                                            </button>
-                                            <button class="flex-1 py-2 px-4 bg-teal text-dark rounded hover:bg-teal-light transition-colors view-updated" data-id="${studentId}">
-                                                View Details
-                                            </button>
-                                        </div>
-                                    </div>
-                                `;
-                                
-                                // Reload student data
-                                if (typeof loadStudents === 'function') {
-                                    loadStudents(true);
-                                }
-                                
-                                // Set up close button
-                                document.querySelectorAll('.close-modal').forEach(btn => {
-                                    btn.addEventListener('click', function() {
-                                        modal.classList.add('hidden');
-                                    });
-                                });
-                                
-                                // Set up view updated button
-                                document.querySelectorAll('.view-updated').forEach(btn => {
-                                    btn.addEventListener('click', function() {
-                                        const studentId = this.getAttribute('data-id');
-                                        viewStudentDetails(studentId);
-                                    });
-                                });
-                            } else {
-                                alert(data.message || 'Error updating student.');
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error:', error);
-                            alert('An error occurred while updating the student.');
-                        });
-                    });
-                }
-                
-                // Delete student confirmation
-                function deleteStudentConfirm(student) {
-                    const modal = document.getElementById('confirmationModal');
-                    const modalContent = document.getElementById('confirmationModalContent');
-                    
-                    modalContent.innerHTML = `
-                        <div class="p-6">
-                            <h3 class="text-xl font-medium text-light mb-4">Delete Student</h3>
-                            <p class="text-gray-400 mb-6">Are you sure you want to delete <span class="text-light">${student.Name}</span>? This action cannot be undone.</p>
-                            
-                            <div class="flex space-x-3">
-                                <button class="flex-1 py-2 px-4 bg-dark-3 text-light rounded hover:bg-dark-4 transition-colors cancel-delete">
-                                    Cancel
-                                </button>
-                                <button class="flex-1 py-2 px-4 bg-red-600 text-white rounded hover:bg-red-700 transition-colors confirm-delete" data-id="${student.Student_ID}">
-                                    Delete
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                    
-                    modal.classList.remove('hidden');
-                    
-                    // Cancel button event
-                    document.querySelectorAll('.cancel-delete').forEach(button => {
-                        button.addEventListener('click', function() {
-                            modal.classList.add('hidden');
-                        });
-                    });
-                    
-                    // Confirm delete button event
-                    document.querySelectorAll('.confirm-delete').forEach(button => {
-                        button.addEventListener('click', function() {
-                            const studentId = this.getAttribute('data-id');
-                            
-                            fetch(`../includes/api/delete_student.php?id=${studentId}`, {
-                                method: 'DELETE'
-                            })
-                            .then(response => response.json())
-                            .then(data => {
-                                if (data.success) {
-                                    // Hide the confirmation modal
-                                    modal.classList.add('hidden');
-                                    
-                                    // Hide the student details modal if it's open
-                                    document.getElementById('studentModal').classList.add('hidden');
-                                    
-                                    // Show success notification
-                                    showNotification('Student deleted successfully', 'success');
-                                    
-                                    // Refresh the student list
-                                    fetchStudentsList();
-                                } else {
-                                    showNotification('Error deleting student: ' + data.message, 'error');
-                                }
-                            })
-                            .catch(error => {
-                                console.error('Error:', error);
-                                showNotification('An error occurred while deleting the student', 'error');
-                            });
-                        });
-                    });
                 }
                 
                 // Mark attendance modal

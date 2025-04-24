@@ -167,7 +167,9 @@ if (isset($_COOKIE['remember_user']) && !isset($_SESSION['user_id'])) {
 						<!-- Login Button -->
 						<button
 							type="submit"
-							class="w-full bg-gradient-button hover:opacity-90 text-light py-3 px-6 rounded-lg font-bold text-lg tracking-wide transition-all shadow-teal btn-click-animation"
+							class="w-full bg-gradient-button hover:opacity-90 text-light py-3 px-6 rounded-lg font-bold text-lg tracking-wide transition-all shadow-teal btn-click-animation transform hover:scale-105 active:scale-95 cursor-pointer"
+							onmouseover="this.classList.add('shadow-lg')" 
+							onmouseout="this.classList.remove('shadow-lg')"
 						>
 							Login
 						</button>

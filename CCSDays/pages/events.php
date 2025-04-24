@@ -67,7 +67,7 @@ if ($isPartial) {
                     <td class="px-4 py-3">
                         <div class="flex gap-2">
                             <button class="icon-button view-event" data-id="1">View</button>
-                            <button class="icon-button edit-event" data-id="1">Edit</button>
+                            <button class="icon-button edit-event hover:bg-teal-900 hover:text-teal-light transition-colors cursor-pointer active:scale-95 transform duration-100" data-id="1">Edit</button>
                         </div>
                     </td>
                 </tr>
@@ -290,8 +290,8 @@ if ($isPartial) {
                             <td class="px-4 py-3"><span class="text-gray-400">Not set</span></td>
                             <td class="px-4 py-3">
                                 <div class="flex gap-2">
-                                    <button class="icon-button view-event" data-id="2">View</button>
-                                    <button class="icon-button approve-event" data-id="2">Approve</button>
+                                    <button class="icon-button view-event hover:bg-teal-900 hover:text-teal-light transition-colors cursor-pointer active:scale-95 transform duration-100" data-id="2">View</button>
+                                    <button class="icon-button approve-event hover:bg-teal-900 hover:text-teal-light transition-colors cursor-pointer active:scale-95 transform duration-100" data-id="2">Approve</button>
                                 </div>
                             </td>
                         </tr>
@@ -302,13 +302,13 @@ if ($isPartial) {
     </div>
 
     <!-- Create Event Modal -->
-    <div id="createEventModal" class="modal hidden fixed inset-0 z-50">
-        <div class="modal-overlay absolute inset-0 bg-black opacity-50"></div>
-        <div class="modal-container bg-dark-2 w-11/12 md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto">
+    <div id="createEventModal" class="modal hidden fixed inset-0 z-50 flex items-center justify-center">
+        <div class="modal-overlay absolute inset-0 bg-black opacity-70"></div>
+        <div class="modal-container bg-dark-2 w-11/12 md:max-w-md mx-auto rounded-lg shadow-2xl z-50 overflow-y-auto transform transition-all">
             <div class="modal-content py-4 text-left px-6">
                 <div class="flex justify-between items-center pb-3">
                     <p class="text-2xl font-bold text-teal-light">Create Event</p>
-                    <div class="modal-close cursor-pointer z-50">
+                    <div class="modal-close cursor-pointer z-50 hover:bg-dark-3 p-1 rounded-full transition-all">
                         <svg class="fill-current text-white" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">
                             <path d="M14.53 4.53l-1.06-1.06L9 7.94 4.53 3.47 3.47 4.53 7.94 9l-4.47 4.47 1.06 1.06L9 10.06l4.47 4.47 1.06-1.06L10.06 9z"></path>
                         </svg>
@@ -357,23 +357,23 @@ if ($isPartial) {
     </div>
 
     <!-- View Event Modal -->
-    <div id="viewEventModal" class="modal hidden fixed inset-0 z-50">
-        <div class="modal-overlay absolute inset-0 bg-black opacity-50"></div>
-        <div class="modal-container bg-dark-2 w-11/12 md:max-w-md mx-auto rounded shadow-lg z-50 overflow-y-auto">
-            <div class="modal-content py-4 text-left px-6">
-                <div class="flex justify-between items-center pb-3">
-                    <p class="text-2xl font-bold text-teal-light">Event Details</p>
-                    <div class="modal-close cursor-pointer z-50">
-                        <svg class="fill-current text-white" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">
+    <div id="viewEventModal" class="modal hidden fixed inset-0 z-50 flex items-center justify-center">
+        <div class="modal-overlay absolute inset-0 bg-black opacity-70"></div>
+        <div class="modal-container bg-dark-2 w-11/12 md:max-w-md mx-auto rounded-lg shadow-2xl z-50 overflow-hidden transform transition-all">
+            <div class="modal-content py-6 text-left px-8">
+                <div class="flex justify-between items-center pb-4 border-b border-dark-3">
+                    <h3 class="text-2xl font-bold text-teal-light select-text">Event Details</h3>
+                    <div class="modal-close cursor-pointer z-50 hover:bg-dark-3 p-1 rounded-full transition-all">
+                        <svg class="fill-current text-white" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 18 18">
                             <path d="M14.53 4.53l-1.06-1.06L9 7.94 4.53 3.47 3.47 4.53 7.94 9l-4.47 4.47 1.06 1.06L9 10.06l4.47 4.47 1.06-1.06L10.06 9z"></path>
                         </svg>
                     </div>
                 </div>
-                <div id="eventDetails">
+                <div id="eventDetails" class="py-4 select-text">
                     <!-- Event details will be populated here -->
                 </div>
-                <div class="flex justify-end pt-2">
-                    <button type="button" class="modal-close px-4 bg-transparent p-3 rounded-lg text-gray-400 hover:text-white">Close</button>
+                <div class="flex justify-end pt-3 border-t border-dark-3">
+                    <button type="button" class="modal-close px-6 bg-teal-light p-3 rounded-lg text-dark-1 hover:bg-teal-dark font-bold transition-all">Close</button>
                 </div>
             </div>
         </div>

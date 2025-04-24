@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // Modal elements
     const createEventBtn = document.getElementById('createEventBtn');
     const pendingEventsBtn = document.getElementById('pendingEventsBtn');
     const createEventModal = document.getElementById('createEventModal');
@@ -8,25 +7,20 @@ document.addEventListener('DOMContentLoaded', function() {
     const enableReminderCheckbox = document.getElementById('enableReminder');
     const reminderOptions = document.getElementById('reminderOptions');
 
-    // Event listeners for opening modals
     if (createEventBtn) {
-        createEventBtn.addEventListener('click', function() {
+        createEventBtn.addEventListener('click', () => {
             createEventModal.classList.remove('hidden');
         });
     }
 
-    // Event listener for pending events button
     if (pendingEventsBtn) {
-        pendingEventsBtn.addEventListener('click', function() {
-            // Filter to show only pending events
+        pendingEventsBtn.addEventListener('click', () => {
             filterEventsByStatus('pending');
         });
     }
 
-    // Event listeners for closing modals
     modalCloseButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            // Find the closest modal parent and hide it
+        button.addEventListener('click', () => {
             const modal = button.closest('.modal');
             if (modal) {
                 modal.classList.add('hidden');
@@ -34,118 +28,123 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Event listener for reminder checkbox
     if (enableReminderCheckbox && reminderOptions) {
         enableReminderCheckbox.addEventListener('change', function() {
-            if (this.checked) {
-                reminderOptions.classList.remove('hidden');
-            } else {
-                reminderOptions.classList.add('hidden');
-            }
+            reminderOptions.classList.toggle('hidden', !this.checked);
         });
     }
 
-    // Event form submission
     const createEventForm = document.getElementById('createEventForm');
     if (createEventForm) {
-        createEventForm.addEventListener('submit', function(e) {
+        createEventForm.addEventListener('submit', e => {
             e.preventDefault();
             
-            // Get form values
-            const eventName = document.getElementById('eventName').value;
-            const eventDate = document.getElementById('eventDate').value;
-            const eventVenue = document.getElementById('eventVenue').value;
-            const eventDescription = document.getElementById('eventDescription').value;
-            const enableReminder = document.getElementById('enableReminder').checked;
+            const formData = new FormData(createEventForm);
+            const eventData = {
+                name: formData.get('eventName'),
+                date: formData.get('eventDate'),
+                venue: formData.get('eventVenue'),
+                description: formData.get('eventDescription'),
+                reminder: formData.get('enableReminder') ? getSelectedReminderOption() : null,
+                status: 'pending'
+            };
             
-            // Validate form
-            if (!eventName || !eventDate || !eventVenue) {
+            if (!eventData.name || !eventData.date || !eventData.venue) {
                 alert('Please fill in all required fields');
                 return;
             }
             
-            // Create event object
-            const eventData = {
-                name: eventName,
-                date: eventDate,
-                venue: eventVenue,
-                description: eventDescription,
-                reminder: enableReminder ? getSelectedReminderOption() : null,
-                status: 'pending' // New events are pending by default
-            };
-            
-            // Send data to server (this would be an AJAX call in a real application)
-            console.log('Creating event:', eventData);
-            
-            // For demo purposes, simulate a successful creation
-            alert('Event created successfully! Waiting for approval.');
-            
-            // Close the modal and reset form
-            createEventModal.classList.add('hidden');
-            createEventForm.reset();
-            
-            // In a real application, you would refresh the events list or add the new event to the table
-            // For demo purposes, we'll just reload the page
-            // window.location.reload();
+            fetch('/api/events', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(eventData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert('Event created successfully! Waiting for approval.');
+                createEventModal.classList.add('hidden');
+                createEventForm.reset();
+                loadEvents();
+            })
+            .catch(error => {
+                console.error('Error creating event:', error);
+                alert('Failed to create event. Please try again.');
+            });
         });
     }
 
-    // Function to get selected reminder option
     function getSelectedReminderOption() {
         const reminderSelect = document.querySelector('#reminderOptions select');
-        return reminderSelect ? reminderSelect.value : '1d'; // Default to 1 day if not found
+        return reminderSelect ? reminderSelect.value : '1d';
     }
 
-    // Function to filter events by status
     function filterEventsByStatus(status) {
         const eventRows = document.querySelectorAll('tbody tr');
         
         eventRows.forEach(row => {
             const statusCell = row.querySelector('td:nth-child(4) span');
             if (statusCell) {
-                if (status === 'all' || statusCell.classList.contains(status)) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
-                }
+                row.style.display = (status === 'all' || statusCell.classList.contains(status)) ? '' : 'none';
             }
         });
     }
 
-    // Event listeners for view, edit, approve buttons
+    function loadEvents() {
+        setupEventActionButtons();
+    }
+
+    function renderEvents(events) {
+        const tableBody = document.querySelector('table tbody');
+        if (!tableBody) return;
+        
+        tableBody.innerHTML = events.map(event => `
+            <tr>
+                <td>${event.name}</td>
+                <td>${event.date}</td>
+                <td>${event.venue}</td>
+                <td><span class="status-badge ${event.status}">${event.status}</span></td>
+                <td>${event.description.substring(0, 50)}${event.description.length > 50 ? '...' : ''}</td>
+                <td>
+                    <div class="flex space-x-2">
+                        <button class="icon-button view-event" data-id="${event.id}">View</button>
+                        ${event.status === 'pending' ? 
+                            `<button class="icon-button approve-event" data-id="${event.id}">Approve</button>` : 
+                            `<button class="icon-button edit-event" data-id="${event.id}">Edit</button>`
+                        }
+                        <button class="icon-button delete-event" data-id="${event.id}">Delete</button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+    }
+
     setupEventActionButtons();
 
     function setupEventActionButtons() {
-        // View event buttons
-        const viewButtons = document.querySelectorAll('.view-event');
-        viewButtons.forEach(button => {
+        document.querySelectorAll('.view-event').forEach(button => {
             button.addEventListener('click', function() {
                 const eventId = this.getAttribute('data-id');
                 viewEvent(eventId);
             });
         });
 
-        // Edit event buttons
-        const editButtons = document.querySelectorAll('.edit-event');
-        editButtons.forEach(button => {
+        document.querySelectorAll('.edit-event').forEach(button => {
             button.addEventListener('click', function() {
                 const eventId = this.getAttribute('data-id');
                 editEvent(eventId);
             });
         });
 
-        // Approve event buttons
-        const approveButtons = document.querySelectorAll('.approve-event');
-        approveButtons.forEach(button => {
+        document.querySelectorAll('.approve-event').forEach(button => {
             button.addEventListener('click', function() {
                 const eventId = this.getAttribute('data-id');
                 approveEvent(eventId);
             });
         });
 
-        // Delete event buttons
-        const deleteButtons = document.querySelectorAll('.delete-event');
-        deleteButtons.forEach(button => {
+        document.querySelectorAll('.delete-event').forEach(button => {
             button.addEventListener('click', function() {
                 const eventId = this.getAttribute('data-id');
                 deleteEvent(eventId);
@@ -153,88 +152,66 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Function to view event details
     function viewEvent(eventId) {
-        console.log('Viewing event:', eventId);
-        
-        // In a real application, you would fetch event details from the server
-        // For demo purposes, we'll use hardcoded data
-        let eventDetails;
-        
-        if (eventId === '1') {
-            eventDetails = {
-                name: 'Programming Competition',
-                date: '2023-04-19 10:00 AM',
-                venue: 'CCS Laboratory',
-                description: 'A competitive programming event for all CCS students. Participants will solve algorithmic problems within a time limit.',
-                status: 'approved',
-                reminder: 'Active (1 day before)'
-            };
-        } else if (eventId === '2') {
-            eventDetails = {
-                name: 'Web Development Workshop',
-                date: '2023-04-19 2:30 PM',
-                venue: 'Multi-Purpose Hall',
-                description: 'Learn the basics of web development using HTML, CSS, and JavaScript. Bring your own laptop.',
-                status: 'pending',
-                reminder: 'Not set'
-            };
-        } else {
-            eventDetails = {
-                name: 'Unknown Event',
-                date: 'N/A',
-                venue: 'N/A',
-                description: 'Event details not found',
-                status: 'unknown',
-                reminder: 'N/A'
-            };
-        }
-        
-        // Populate the event details in the modal
-        const detailsContainer = document.getElementById('eventDetails');
-        if (detailsContainer) {
-            detailsContainer.innerHTML = `
-                <div class="mb-4">
-                    <h3 class="text-xl font-bold">${eventDetails.name}</h3>
-                    <p class="text-gray-400">${eventDetails.date} at ${eventDetails.venue}</p>
-                </div>
-                <div class="mb-4">
-                    <p class="text-sm text-gray-300">${eventDetails.description}</p>
-                </div>
-                <div class="flex justify-between mb-4">
-                    <div>
-                        <span class="text-sm font-bold">Status:</span>
-                        <span class="status-badge ${eventDetails.status}">${eventDetails.status}</span>
-                    </div>
-                    <div>
-                        <span class="text-sm font-bold">Reminder:</span>
-                        <span class="text-sm">${eventDetails.reminder}</span>
-                    </div>
-                </div>
-            `;
-        }
-        
-        // Show the modal
-        viewEventModal.classList.remove('hidden');
-    }
-
-    // Function to edit an event
-    function editEvent(eventId) {
-        console.log('Editing event:', eventId);
-        // In a real application, you would fetch event details and populate a form
-        alert('Edit functionality would open a form with event details for editing');
-    }
-
-    // Function to approve an event
-    function approveEvent(eventId) {
-        console.log('Approving event:', eventId);
-        
-        // In a real application, you would send an AJAX request to update the event status
-        // For demo purposes, we'll just show an alert
-        if (confirm('Are you sure you want to approve this event?')) {
-            alert('Event approved successfully!');
+        const eventRow = document.querySelector(`.view-event[data-id="${eventId}"]`).closest('tr');
+        if (eventRow) {
+            const name = eventRow.querySelector('td:nth-child(1)').textContent;
+            const dateTime = eventRow.querySelector('td:nth-child(2)').textContent;
+            const venue = eventRow.querySelector('td:nth-child(3)').textContent;
+            const status = eventRow.querySelector('td:nth-child(4) span').textContent;
+            const description = eventRow.querySelector('td:nth-child(5)').textContent;
             
-            // Update the UI to reflect the change
+            const detailsContainer = document.getElementById('eventDetails');
+            if (detailsContainer) {
+                detailsContainer.innerHTML = `
+                    <div class="mb-4">
+                        <h3 class="text-xl font-bold">${name}</h3>
+                        <p class="text-gray-400">${dateTime} at ${venue}</p>
+                    </div>
+                    <div class="mb-4">
+                        <p class="text-sm text-gray-300">${description}</p>
+                    </div>
+                    <div class="flex justify-between mb-4">
+                        <div>
+                            <span class="text-sm font-bold">Status:</span>
+                            <span class="status-badge ${status}">${status}</span>
+                        </div>
+                        <div>
+                            <span class="text-sm font-bold">Reminder:</span>
+                            <span class="text-sm">Not set</span>
+                        </div>
+                    </div>
+                `;
+            }
+            viewEventModal.classList.remove('hidden');
+        }
+    }
+
+    function editEvent(eventId) {
+        const eventRow = document.querySelector(`.edit-event[data-id="${eventId}"]`).closest('tr');
+        if (eventRow) {
+            const name = eventRow.querySelector('td:nth-child(1)').textContent;
+            const dateTime = eventRow.querySelector('td:nth-child(2)').textContent;
+            const venue = eventRow.querySelector('td:nth-child(3)').textContent;
+            const description = eventRow.querySelector('td:nth-child(5)').textContent;
+            
+            createEventModal.classList.remove('hidden');
+            
+            document.getElementById('eventName').value = name;
+            document.getElementById('eventDate').value = dateTime;
+            document.getElementById('eventVenue').value = venue;
+            document.getElementById('eventDescription').value = description;
+            
+            document.getElementById('enableReminder').checked = false;
+            reminderOptions.classList.add('hidden');
+            
+            createEventForm.setAttribute('data-mode', 'edit');
+            createEventForm.setAttribute('data-id', eventId);
+        }
+    }
+
+    function approveEvent(eventId) {
+        if (confirm('Are you sure you want to approve this event?')) {
             const eventRow = document.querySelector(`.approve-event[data-id="${eventId}"]`).closest('tr');
             const statusCell = eventRow.querySelector('td:nth-child(4) span');
             
@@ -244,7 +221,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 statusCell.textContent = 'approved';
             }
             
-            // Replace the approve button with an edit button
             const actionCell = eventRow.querySelector('td:nth-child(6) div');
             if (actionCell) {
                 const approveButton = actionCell.querySelector(`.approve-event[data-id="${eventId}"]`);
@@ -260,23 +236,20 @@ document.addEventListener('DOMContentLoaded', function() {
                     actionCell.replaceChild(editButton, approveButton);
                 }
             }
+            
+            alert('Event approved successfully!');
         }
     }
 
-    // Function to delete an event
     function deleteEvent(eventId) {
-        console.log('Deleting event:', eventId);
-        
-        // In a real application, you would send an AJAX request to delete the event
-        // For demo purposes, we'll just show an alert
         if (confirm('Are you sure you want to delete this event? This action cannot be undone.')) {
-            alert('Event deleted successfully!');
-            
-            // Remove the event row from the table
             const eventRow = document.querySelector(`.delete-event[data-id="${eventId}"]`).closest('tr');
             if (eventRow) {
                 eventRow.remove();
+                alert('Event deleted successfully!');
             }
         }
     }
+    
+    loadEvents();
 });
