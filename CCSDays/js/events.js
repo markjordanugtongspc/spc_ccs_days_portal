@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', function() {
+    // DOM elements
     const createEventBtn = document.getElementById('createEventBtn');
     const pendingEventsBtn = document.getElementById('pendingEventsBtn');
     const createEventModal = document.getElementById('createEventModal');
@@ -6,9 +7,22 @@ document.addEventListener('DOMContentLoaded', function() {
     const modalCloseButtons = document.querySelectorAll('.modal-close');
     const enableReminderCheckbox = document.getElementById('enableReminder');
     const reminderOptions = document.getElementById('reminderOptions');
-
+    const createEventForm = document.getElementById('createEventForm');
+    
+    // API endpoints
+    const API_URL = '../includes/api/events_api.php';
+    
+    // Event listeners
     if (createEventBtn) {
         createEventBtn.addEventListener('click', () => {
+            // Reset form when opening the create modal
+            if (createEventForm) {
+                createEventForm.reset();
+                createEventForm.removeAttribute('data-mode');
+                createEventForm.removeAttribute('data-id');
+                document.querySelector('.modal-content p.text-2xl').textContent = 'Create Event';
+                document.querySelector('button[type="submit"]').textContent = 'Create Event';
+            }
             createEventModal.classList.remove('hidden');
         });
     }
@@ -34,47 +48,324 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    const createEventForm = document.getElementById('createEventForm');
+    // Form submission handler
     if (createEventForm) {
         createEventForm.addEventListener('submit', e => {
             e.preventDefault();
             
-            const formData = new FormData(createEventForm);
-            const eventData = {
-                name: formData.get('eventName'),
-                date: formData.get('eventDate'),
-                venue: formData.get('eventVenue'),
-                description: formData.get('eventDescription'),
-                reminder: formData.get('enableReminder') ? getSelectedReminderOption() : null,
-                status: 'pending'
-            };
+            // Get form values
+            const eventName = document.getElementById('eventName').value.trim();
+            const eventDate = document.getElementById('eventDate').value.trim();
+            const eventVenue = document.getElementById('eventVenue').value.trim();
+            const eventDescription = document.getElementById('eventDescription').value.trim();
+            const enableReminder = document.getElementById('enableReminder').checked;
+            const reminderOption = enableReminder ? getSelectedReminderOption() : null;
             
-            if (!eventData.name || !eventData.date || !eventData.venue) {
-                alert('Please fill in all required fields');
+            console.log('Form values:', { eventName, eventDate, eventVenue, eventDescription, enableReminder, reminderOption });
+            
+            // Validate required fields
+            if (!eventName) {
+                alert('Please enter an event name');
                 return;
             }
             
-            fetch('/api/events', {
-                method: 'POST',
+            if (!eventDate) {
+                alert('Please select a date and time');
+                return;
+            }
+            
+            if (!eventVenue) {
+                alert('Please enter a venue');
+                return;
+            }
+            
+            // Prepare event data
+            const eventData = {
+                name: eventName,
+                date: eventDate,
+                venue: eventVenue,
+                description: eventDescription,
+                reminder: enableReminder,
+                reminderOption: reminderOption
+            };
+            
+            // Log the data being sent
+            console.log('Sending event data:', eventData);
+            
+            // Check if we're editing or creating
+            const isEditing = createEventForm.getAttribute('data-mode') === 'edit';
+            
+            if (isEditing) {
+                // Add the event ID for updating
+                eventData.id = createEventForm.getAttribute('data-id');
+                updateEvent(eventData);
+            } else {
+                // Create new event
+                createEvent(eventData);
+            }
+        });
+    }
+
+    // CRUD Functions
+    function createEvent(eventData) {
+        // Show loading state
+        const submitBtn = createEventForm.querySelector('button[type="submit"]');
+        const originalText = submitBtn.textContent;
+        submitBtn.textContent = 'Creating...';
+        submitBtn.disabled = true;
+        
+        // Send API request
+        fetch(API_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(eventData)
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('API Response:', data);
+            
+            if (data.success) {
+                // Close modal and reset form
+                createEventModal.classList.add('hidden');
+                createEventForm.reset();
+                
+                // Show success message
+                alert('Event created successfully! Waiting for approval.');
+                
+                // Reload the page to show the new event
+                window.location.reload();
+            } else {
+                console.error('API Error:', data);
+                alert('Error: ' + (data.error || 'Failed to create event'));
+            }
+        })
+        .catch(error => {
+            console.error('Error creating event:', error);
+            alert('Failed to create event. Please try again. Error: ' + error.message);
+        })
+        .finally(() => {
+            // Reset button state
+            submitBtn.textContent = originalText;
+            submitBtn.disabled = false;
+        });
+    }
+    
+    function updateEvent(eventData) {
+        // Show loading state
+        const submitBtn = createEventForm.querySelector('button[type="submit"]');
+        const originalText = submitBtn.textContent;
+        submitBtn.textContent = 'Updating...';
+        submitBtn.disabled = true;
+        
+        // Send API request
+        fetch(API_URL, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(eventData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Close modal and reset form
+                createEventModal.classList.add('hidden');
+                createEventForm.reset();
+                
+                // Show success message
+                alert('Event updated successfully!');
+                
+                // Reload the page to show the updated event
+                window.location.reload();
+            } else {
+                alert('Error: ' + (data.error || 'Failed to update event'));
+            }
+        })
+        .catch(error => {
+            console.error('Error updating event:', error);
+            alert('Failed to update event. Please try again.');
+        })
+        .finally(() => {
+            // Reset button state
+            submitBtn.textContent = originalText;
+            submitBtn.disabled = false;
+        });
+    }
+    
+    function approveEvent(eventId) {
+        if (confirm('Are you sure you want to approve this event?')) {
+            // Prepare data
+            const eventData = {
+                id: eventId,
+                status: 'approved'
+            };
+            
+            // Send API request
+            fetch(API_URL, {
+                method: 'PUT',
                 headers: {
-                    'Content-Type': 'application/json',
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(eventData)
             })
             .then(response => response.json())
             .then(data => {
-                alert('Event created successfully! Waiting for approval.');
-                createEventModal.classList.add('hidden');
-                createEventForm.reset();
-                loadEvents();
+                if (data.success) {
+                    // Show success message
+                    alert('Event approved successfully!');
+                    
+                    // Reload the page to show the updated status
+                    window.location.reload();
+                } else {
+                    alert('Error: ' + (data.error || 'Failed to approve event'));
+                }
             })
             .catch(error => {
-                console.error('Error creating event:', error);
-                alert('Failed to create event. Please try again.');
+                console.error('Error approving event:', error);
+                alert('Failed to approve event. Please try again.');
             });
+        }
+    }
+    
+    function deleteEvent(eventId) {
+        if (confirm('Are you sure you want to delete this event? This action cannot be undone.')) {
+            // Prepare data
+            const eventData = {
+                id: eventId
+            };
+            
+            // Send API request
+            fetch(API_URL, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(eventData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Show success message
+                    alert('Event deleted successfully!');
+                    
+                    // Reload the page to update the list
+                    window.location.reload();
+                } else {
+                    alert('Error: ' + (data.error || 'Failed to delete event'));
+                }
+            })
+            .catch(error => {
+                console.error('Error deleting event:', error);
+                alert('Failed to delete event. Please try again.');
+            });
+        }
+    }
+    
+    function viewEvent(eventId) {
+        // Fetch event details from the API
+        fetch(`${API_URL}?id=${eventId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.data.length > 0) {
+                const event = data.data[0];
+                
+                // Format date for display
+                const dateObj = new Date(event.event_date);
+                const formattedDate = dateObj.toLocaleDateString() + ' • ' +
+                                     dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                
+                // Populate event details
+                const detailsContainer = document.getElementById('eventDetails');
+                if (detailsContainer) {
+                    detailsContainer.innerHTML = `
+                        <div class="mb-4">
+                            <h3 class="text-xl font-bold">${event.name}</h3>
+                            <p class="text-gray-400">${formattedDate} at ${event.venue}</p>
+                        </div>
+                        <div class="mb-4">
+                            <p class="text-sm text-gray-300">${event.description}</p>
+                        </div>
+                        <div class="flex justify-between mb-4">
+                            <div>
+                                <span class="text-sm font-bold">Status:</span>
+                                <span class="status-badge ${event.status}">${event.status}</span>
+                            </div>
+                            <div>
+                                <span class="text-sm font-bold">Reminder:</span>
+                                <span class="text-sm">${event.reminder_enabled ? 'Active' : 'Not set'}</span>
+                            </div>
+                        </div>
+                    `;
+                }
+                viewEventModal.classList.remove('hidden');
+            } else {
+                alert('Error: Failed to load event details');
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching event details:', error);
+            alert('Failed to load event details. Please try again.');
+        });
+    }
+    
+    function editEvent(eventId) {
+        // Fetch event details from the API
+        fetch(`${API_URL}?id=${eventId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.data.length > 0) {
+                const event = data.data[0];
+                
+                // Update modal title and button
+                document.querySelector('.modal-content p.text-2xl').textContent = 'Edit Event';
+                document.querySelector('button[type="submit"]').textContent = 'Update Event';
+                
+                // Populate form fields
+                document.getElementById('eventName').value = event.name;
+                
+                // Format date for datetime-local input
+                const dateObj = new Date(event.event_date);
+                const formattedDate = dateObj.toISOString().slice(0, 16); // Format: YYYY-MM-DDTHH:MM
+                document.getElementById('eventDate').value = formattedDate;
+                
+                document.getElementById('eventVenue').value = event.venue;
+                document.getElementById('eventDescription').value = event.description;
+                
+                // Set reminder checkbox and options
+                document.getElementById('enableReminder').checked = event.reminder_enabled == 1;
+                reminderOptions.classList.toggle('hidden', !event.reminder_enabled);
+                
+                if (event.reminder_time) {
+                    const reminderSelect = document.querySelector('#reminderOptions select');
+                    if (reminderSelect) {
+                        reminderSelect.value = event.reminder_time;
+                    }
+                }
+                
+                // Set form mode to edit
+                createEventForm.setAttribute('data-mode', 'edit');
+                createEventForm.setAttribute('data-id', event.id);
+                
+                // Show the modal
+                createEventModal.classList.remove('hidden');
+            } else {
+                alert('Error: Failed to load event details for editing');
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching event details for editing:', error);
+            alert('Failed to load event details. Please try again.');
         });
     }
 
+    // Helper Functions
     function getSelectedReminderOption() {
         const reminderSelect = document.querySelector('#reminderOptions select');
         return reminderSelect ? reminderSelect.value : '1d';
@@ -91,37 +382,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    function loadEvents() {
-        setupEventActionButtons();
-    }
-
-    function renderEvents(events) {
-        const tableBody = document.querySelector('table tbody');
-        if (!tableBody) return;
-        
-        tableBody.innerHTML = events.map(event => `
-            <tr>
-                <td>${event.name}</td>
-                <td>${event.date}</td>
-                <td>${event.venue}</td>
-                <td><span class="status-badge ${event.status}">${event.status}</span></td>
-                <td>${event.description.substring(0, 50)}${event.description.length > 50 ? '...' : ''}</td>
-                <td>
-                    <div class="flex space-x-2">
-                        <button class="icon-button view-event" data-id="${event.id}">View</button>
-                        ${event.status === 'pending' ? 
-                            `<button class="icon-button approve-event" data-id="${event.id}">Approve</button>` : 
-                            `<button class="icon-button edit-event" data-id="${event.id}">Edit</button>`
-                        }
-                        <button class="icon-button delete-event" data-id="${event.id}">Delete</button>
-                    </div>
-                </td>
-            </tr>
-        `).join('');
-    }
-
-    setupEventActionButtons();
-
+    // Set up event action buttons
     function setupEventActionButtons() {
         document.querySelectorAll('.view-event').forEach(button => {
             button.addEventListener('click', function() {
@@ -151,105 +412,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     }
-
-    function viewEvent(eventId) {
-        const eventRow = document.querySelector(`.view-event[data-id="${eventId}"]`).closest('tr');
-        if (eventRow) {
-            const name = eventRow.querySelector('td:nth-child(1)').textContent;
-            const dateTime = eventRow.querySelector('td:nth-child(2)').textContent;
-            const venue = eventRow.querySelector('td:nth-child(3)').textContent;
-            const status = eventRow.querySelector('td:nth-child(4) span').textContent;
-            const description = eventRow.querySelector('td:nth-child(5)').textContent;
-            
-            const detailsContainer = document.getElementById('eventDetails');
-            if (detailsContainer) {
-                detailsContainer.innerHTML = `
-                    <div class="mb-4">
-                        <h3 class="text-xl font-bold">${name}</h3>
-                        <p class="text-gray-400">${dateTime} at ${venue}</p>
-                    </div>
-                    <div class="mb-4">
-                        <p class="text-sm text-gray-300">${description}</p>
-                    </div>
-                    <div class="flex justify-between mb-4">
-                        <div>
-                            <span class="text-sm font-bold">Status:</span>
-                            <span class="status-badge ${status}">${status}</span>
-                        </div>
-                        <div>
-                            <span class="text-sm font-bold">Reminder:</span>
-                            <span class="text-sm">Not set</span>
-                        </div>
-                    </div>
-                `;
-            }
-            viewEventModal.classList.remove('hidden');
-        }
-    }
-
-    function editEvent(eventId) {
-        const eventRow = document.querySelector(`.edit-event[data-id="${eventId}"]`).closest('tr');
-        if (eventRow) {
-            const name = eventRow.querySelector('td:nth-child(1)').textContent;
-            const dateTime = eventRow.querySelector('td:nth-child(2)').textContent;
-            const venue = eventRow.querySelector('td:nth-child(3)').textContent;
-            const description = eventRow.querySelector('td:nth-child(5)').textContent;
-            
-            createEventModal.classList.remove('hidden');
-            
-            document.getElementById('eventName').value = name;
-            document.getElementById('eventDate').value = dateTime;
-            document.getElementById('eventVenue').value = venue;
-            document.getElementById('eventDescription').value = description;
-            
-            document.getElementById('enableReminder').checked = false;
-            reminderOptions.classList.add('hidden');
-            
-            createEventForm.setAttribute('data-mode', 'edit');
-            createEventForm.setAttribute('data-id', eventId);
-        }
-    }
-
-    function approveEvent(eventId) {
-        if (confirm('Are you sure you want to approve this event?')) {
-            const eventRow = document.querySelector(`.approve-event[data-id="${eventId}"]`).closest('tr');
-            const statusCell = eventRow.querySelector('td:nth-child(4) span');
-            
-            if (statusCell) {
-                statusCell.classList.remove('pending');
-                statusCell.classList.add('approved');
-                statusCell.textContent = 'approved';
-            }
-            
-            const actionCell = eventRow.querySelector('td:nth-child(6) div');
-            if (actionCell) {
-                const approveButton = actionCell.querySelector(`.approve-event[data-id="${eventId}"]`);
-                if (approveButton) {
-                    const editButton = document.createElement('button');
-                    editButton.className = 'icon-button edit-event';
-                    editButton.setAttribute('data-id', eventId);
-                    editButton.textContent = 'Edit';
-                    editButton.addEventListener('click', function() {
-                        editEvent(eventId);
-                    });
-                    
-                    actionCell.replaceChild(editButton, approveButton);
-                }
-            }
-            
-            alert('Event approved successfully!');
-        }
-    }
-
-    function deleteEvent(eventId) {
-        if (confirm('Are you sure you want to delete this event? This action cannot be undone.')) {
-            const eventRow = document.querySelector(`.delete-event[data-id="${eventId}"]`).closest('tr');
-            if (eventRow) {
-                eventRow.remove();
-                alert('Event deleted successfully!');
-            }
-        }
-    }
     
-    loadEvents();
+    // Initialize
+    setupEventActionButtons();
 });

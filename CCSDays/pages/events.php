@@ -18,6 +18,55 @@ $userName = $_SESSION['user_name'] ?? 'Admin';
 $userRole = ucfirst($_SESSION['user_role'] ?? 'Admin');
 $userInitials = strtoupper(substr($userName, 0, 1)) . (strpos($userName, ' ') !== false ? strtoupper(substr($userName, strpos($userName, ' ') + 1, 1)) : '');
 
+// Include database configuration after session_start
+require_once '../includes/config.php';
+
+// Initialize variables
+$events = [];
+$pendingCount = 0;
+
+// Check if database table exists
+$tableExists = false;
+try {
+    // Log connection attempt
+    error_log("Connecting to database: $servername, $username, $database, $port");
+    $conn = new mysqli($servername, $username, $password, $database, $port);
+    
+    if ($conn->connect_error) {
+        // Connection failed, but we'll continue with empty events
+        $connectionError = $conn->connect_error;
+    } else {
+        // Check if events table exists
+        $result = $conn->query("SHOW TABLES LIKE 'events'");
+        if ($result && $result->num_rows > 0) {
+            $tableExists = true;
+            
+            // Fetch events from database
+            $sql = "SELECT * FROM events ORDER BY event_date DESC";
+            $result = $conn->query($sql);
+            
+            if ($result && $result->num_rows > 0) {
+                while ($row = $result->fetch_assoc()) {
+                    $events[] = $row;
+                }
+            }
+            
+            // Count pending events
+            foreach ($events as $event) {
+                if ($event['status'] === 'pending') {
+                    $pendingCount++;
+                }
+            }
+        }
+        
+        // Close connection
+        $conn->close();
+    }
+} catch (Exception $e) {
+    // Handle any exceptions
+    $connectionError = $e->getMessage();
+}
+
 // Check if this is a partial request (for embedding in dashboard)
 $isPartial = isset($_GET['partial']) && $_GET['partial'] === 'true';
 
@@ -40,7 +89,7 @@ if ($isPartial) {
                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             Pending Approvals
-            <span class="ml-2 bg-teal-light text-dark-1 px-2 py-0.5 rounded-full text-xs">7</span>
+            <span class="ml-2 bg-teal-light text-dark-1 px-2 py-0.5 rounded-full text-xs"><?php echo $pendingCount; ?></span>
         </button>
     </div>
     
@@ -58,32 +107,42 @@ if ($isPartial) {
                 </tr>
             </thead>
             <tbody class="divide-y divide-dark-3">
-                <tr class="hover:bg-dark-3 transition-all">
-                    <td class="px-4 py-3">Programming Competition</td>
-                    <td class="px-4 py-3">2023-04-19 • 10:00 AM</td>
-                    <td class="px-4 py-3">CCS Laboratory</td>
-                    <td class="px-4 py-3"><span class="status-badge approved">approved</span></td>
-                    <td class="px-4 py-3"><span class="text-teal-light">Active</span></td>
-                    <td class="px-4 py-3">
-                        <div class="flex gap-2">
-                            <button class="icon-button view-event" data-id="1">View</button>
-                            <button class="icon-button edit-event hover:bg-teal-900 hover:text-teal-light transition-colors cursor-pointer active:scale-95 transform duration-100" data-id="1">Edit</button>
-                        </div>
-                    </td>
-                </tr>
-                <tr class="hover:bg-dark-3 transition-all">
-                    <td class="px-4 py-3">Web Development Workshop</td>
-                    <td class="px-4 py-3">2023-04-19 • 2:30 PM</td>
-                    <td class="px-4 py-3">Multi-Purpose Hall</td>
-                    <td class="px-4 py-3"><span class="status-badge pending">pending</span></td>
-                    <td class="px-4 py-3"><span class="text-gray-400">Not set</span></td>
-                    <td class="px-4 py-3">
-                        <div class="flex gap-2">
-                            <button class="icon-button view-event" data-id="2">View</button>
-                            <button class="icon-button approve-event" data-id="2">Approve</button>
-                        </div>
-                    </td>
-                </tr>
+                <?php if (count($events) > 0): ?>
+                    <?php foreach ($events as $event): ?>
+                        <?php
+                            // Format date for display
+                            $dateObj = new DateTime($event['event_date']);
+                            $formattedDate = $dateObj->format('Y-m-d • g:i A');
+                            
+                            // Determine reminder status
+                            $reminderStatus = $event['reminder_enabled'] ?
+                                '<span class="text-teal-light">Active</span>' :
+                                '<span class="text-gray-400">Not set</span>';
+                        ?>
+                        <tr class="hover:bg-dark-3 transition-all">
+                            <td class="px-4 py-3"><?php echo htmlspecialchars($event['name']); ?></td>
+                            <td class="px-4 py-3"><?php echo $formattedDate; ?></td>
+                            <td class="px-4 py-3"><?php echo htmlspecialchars($event['venue']); ?></td>
+                            <td class="px-4 py-3"><span class="status-badge <?php echo $event['status']; ?>"><?php echo $event['status']; ?></span></td>
+                            <td class="px-4 py-3"><?php echo $reminderStatus; ?></td>
+                            <td class="px-4 py-3">
+                                <div class="flex gap-2">
+                                    <button class="icon-button view-event" data-id="<?php echo $event['id']; ?>">View</button>
+                                    <?php if ($event['status'] === 'pending'): ?>
+                                        <button class="icon-button approve-event" data-id="<?php echo $event['id']; ?>">Approve</button>
+                                    <?php else: ?>
+                                        <button class="icon-button edit-event" data-id="<?php echo $event['id']; ?>">Edit</button>
+                                    <?php endif; ?>
+                                    <button class="icon-button delete-event" data-id="<?php echo $event['id']; ?>">Delete</button>
+                                </div>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <tr>
+                        <td colspan="6" class="px-4 py-6 text-center text-gray-400">No events found. Create your first event!</td>
+                    </tr>
+                <?php endif; ?>
             </tbody>
         </table>
     </div>
@@ -251,7 +310,7 @@ if ($isPartial) {
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     Pending Approvals
-                    <span class="ml-2 bg-teal-light text-dark-1 px-2 py-0.5 rounded-full text-xs">7</span>
+                    <span class="ml-2 bg-teal-light text-dark-1 px-2 py-0.5 rounded-full text-xs"><?php echo $pendingCount; ?></span>
                 </button>
             </div>
             
@@ -269,32 +328,42 @@ if ($isPartial) {
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-dark-3">
-                        <tr class="hover:bg-dark-3 transition-all">
-                            <td class="px-4 py-3">Programming Competition</td>
-                            <td class="px-4 py-3">2023-04-19 • 10:00 AM</td>
-                            <td class="px-4 py-3">CCS Laboratory</td>
-                            <td class="px-4 py-3"><span class="status-badge approved">approved</span></td>
-                            <td class="px-4 py-3"><span class="text-teal-light">Active</span></td>
-                            <td class="px-4 py-3">
-                                <div class="flex gap-2">
-                                    <button class="icon-button view-event" data-id="1">View</button>
-                                    <button class="icon-button edit-event" data-id="1">Edit</button>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr class="hover:bg-dark-3 transition-all">
-                            <td class="px-4 py-3">Web Development Workshop</td>
-                            <td class="px-4 py-3">2023-04-19 • 2:30 PM</td>
-                            <td class="px-4 py-3">Multi-Purpose Hall</td>
-                            <td class="px-4 py-3"><span class="status-badge pending">pending</span></td>
-                            <td class="px-4 py-3"><span class="text-gray-400">Not set</span></td>
-                            <td class="px-4 py-3">
-                                <div class="flex gap-2">
-                                    <button class="icon-button view-event hover:bg-teal-900 hover:text-teal-light transition-colors cursor-pointer active:scale-95 transform duration-100" data-id="2">View</button>
-                                    <button class="icon-button approve-event hover:bg-teal-900 hover:text-teal-light transition-colors cursor-pointer active:scale-95 transform duration-100" data-id="2">Approve</button>
-                                </div>
-                            </td>
-                        </tr>
+                        <?php if (count($events) > 0): ?>
+                            <?php foreach ($events as $event): ?>
+                                <?php
+                                    // Format date for display
+                                    $dateObj = new DateTime($event['event_date']);
+                                    $formattedDate = $dateObj->format('Y-m-d • g:i A');
+                                    
+                                    // Determine reminder status
+                                    $reminderStatus = $event['reminder_enabled'] ?
+                                        '<span class="text-teal-light">Active</span>' :
+                                        '<span class="text-gray-400">Not set</span>';
+                                ?>
+                                <tr class="hover:bg-dark-3 transition-all">
+                                    <td class="px-4 py-3"><?php echo htmlspecialchars($event['name']); ?></td>
+                                    <td class="px-4 py-3"><?php echo $formattedDate; ?></td>
+                                    <td class="px-4 py-3"><?php echo htmlspecialchars($event['venue']); ?></td>
+                                    <td class="px-4 py-3"><span class="status-badge <?php echo $event['status']; ?>"><?php echo $event['status']; ?></span></td>
+                                    <td class="px-4 py-3"><?php echo $reminderStatus; ?></td>
+                                    <td class="px-4 py-3">
+                                        <div class="flex gap-2">
+                                            <button class="icon-button view-event" data-id="<?php echo $event['id']; ?>">View</button>
+                                            <?php if ($event['status'] === 'pending'): ?>
+                                                <button class="icon-button approve-event" data-id="<?php echo $event['id']; ?>">Approve</button>
+                                            <?php else: ?>
+                                                <button class="icon-button edit-event" data-id="<?php echo $event['id']; ?>">Edit</button>
+                                            <?php endif; ?>
+                                            <button class="icon-button delete-event" data-id="<?php echo $event['id']; ?>">Delete</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <tr>
+                                <td colspan="6" class="px-4 py-6 text-center text-gray-400">No events found. Create your first event!</td>
+                            </tr>
+                        <?php endif; ?>
                     </tbody>
                 </table>
             </div>
@@ -317,28 +386,37 @@ if ($isPartial) {
                 <form id="createEventForm">
                     <div class="mb-4">
                         <label class="block text-light text-sm font-bold mb-2" for="eventName">Event Name</label>
-                        <input class="bg-dark-1 appearance-none border border-gray-700 rounded w-full py-2 px-3 text-light leading-tight focus:outline-none focus:border-teal-light" id="eventName" type="text" placeholder="Enter event name">
+                        <input class="bg-dark-1 appearance-none border border-gray-700 rounded w-full py-2 px-3 text-light leading-tight focus:outline-none focus:border-teal-light" id="eventName" name="eventName" type="text" placeholder="Enter event name" required>
                     </div>
                     <div class="mb-4">
                         <label class="block text-light text-sm font-bold mb-2" for="eventDate">Date & Time</label>
-                        <input class="bg-dark-1 appearance-none border border-gray-700 rounded w-full py-2 px-3 text-light leading-tight focus:outline-none focus:border-teal-light" id="eventDate" type="datetime-local">
+                        <input class="bg-dark-1 appearance-none border border-gray-700 rounded w-full py-2 px-3 text-light leading-tight focus:outline-none focus:border-teal-light" id="eventDate" name="eventDate" type="datetime-local" required>
+                        <script>
+                            // Set default value to current date and time
+                            document.addEventListener('DOMContentLoaded', function() {
+                                const now = new Date();
+                                now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+                                const defaultDate = now.toISOString().slice(0, 16);
+                                document.getElementById('eventDate').value = defaultDate;
+                            });
+                        </script>
                     </div>
                     <div class="mb-4">
                         <label class="block text-light text-sm font-bold mb-2" for="eventVenue">Venue</label>
-                        <input class="bg-dark-1 appearance-none border border-gray-700 rounded w-full py-2 px-3 text-light leading-tight focus:outline-none focus:border-teal-light" id="eventVenue" type="text" placeholder="Enter venue">
+                        <input class="bg-dark-1 appearance-none border border-gray-700 rounded w-full py-2 px-3 text-light leading-tight focus:outline-none focus:border-teal-light" id="eventVenue" name="eventVenue" type="text" placeholder="Enter venue" required>
                     </div>
                     <div class="mb-4">
                         <label class="block text-light text-sm font-bold mb-2" for="eventDescription">Description</label>
-                        <textarea class="bg-dark-1 appearance-none border border-gray-700 rounded w-full py-2 px-3 text-light leading-tight focus:outline-none focus:border-teal-light" id="eventDescription" placeholder="Enter event description" rows="3"></textarea>
+                        <textarea class="bg-dark-1 appearance-none border border-gray-700 rounded w-full py-2 px-3 text-light leading-tight focus:outline-none focus:border-teal-light" id="eventDescription" name="eventDescription" placeholder="Enter event description" rows="3"></textarea>
                     </div>
                     <div class="mb-4">
                         <label class="block text-light text-sm font-bold mb-2">Set Reminder</label>
                         <div class="flex items-center">
-                            <input type="checkbox" id="enableReminder" class="mr-2">
+                            <input type="checkbox" id="enableReminder" name="enableReminder" class="mr-2">
                             <label for="enableReminder">Enable automatic reminder</label>
                         </div>
                         <div id="reminderOptions" class="mt-2 hidden">
-                            <select class="bg-dark-1 border border-gray-700 rounded w-full py-2 px-3 text-light focus:outline-none focus:border-teal-light">
+                            <select name="reminderOption" class="bg-dark-1 border border-gray-700 rounded w-full py-2 px-3 text-light focus:outline-none focus:border-teal-light">
                                 <option value="1h">1 hour before</option>
                                 <option value="3h">3 hours before</option>
                                 <option value="1d">1 day before</option>
