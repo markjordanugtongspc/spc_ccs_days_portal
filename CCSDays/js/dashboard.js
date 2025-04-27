@@ -6,6 +6,20 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     // Initialize quick action buttons (includes Approve Events handler)
     setupQuickActionButtons();
+    // Dynamic pending approvals count
+    function refreshPendingApprovalsCount() {
+        fetch('../includes/api/events_api.php?status=pending')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.data) {
+                    const elem = document.getElementById('pendingApprovalsCount');
+                    if (elem) elem.textContent = data.data.length;
+                }
+            })
+            .catch(error => console.error('Error fetching pending approvals count:', error));
+    }
+    // Initial load of pending count
+    refreshPendingApprovalsCount();
     // Form elements
     const loginForm = document.getElementById('loginForm');
     const emailInput = document.getElementById('email');
@@ -460,6 +474,8 @@ document.addEventListener('DOMContentLoaded', function () {
                                     });
                                     // Refresh events table
                                     loadEventsContent();
+                                    // Refresh pending approvals count
+                                    refreshPendingApprovalsCount();
                                 } else {
                                     CCSModal.show({
                                         icon: 'error',
