@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', function() {
             title: title,
             text: text,
             confirmButtonColor: '#14b8a6', // teal-light color
-            background: '#1e293b', // dark-2 color
+            background: 'var(--color-dark-2)', // dark-2 color
             color: '#f8fafc' // light color
         });
     }
@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', function() {
             title: title,
             text: text,
             confirmButtonColor: '#14b8a6', // teal-light color
-            background: '#1e293b', // dark-2 color
+            background: 'var(--color-dark-2)', // dark-2 color
             color: '#f8fafc' // light color
         });
     }
@@ -44,7 +44,7 @@ document.addEventListener('DOMContentLoaded', function() {
             cancelButtonColor: '#475569', // gray-600 color
             confirmButtonText: confirmButtonText,
             cancelButtonText: cancelButtonText,
-            background: '#1e293b', // dark-2 color
+            background: 'var(--color-dark-2)', // dark-2 color
             color: '#f8fafc' // light color
         });
     }
@@ -377,6 +377,63 @@ document.addEventListener('DOMContentLoaded', function() {
                         </div>
                     `;
                 }
+                const container = document.querySelector('#viewEventModal .modal-container');
+                container.style.backgroundImage = '';
+                const savedBg = BackgroundManager.load(eventId);
+                if (savedBg) {
+                    container.style.backgroundImage = `url('${savedBg}')`;
+                    container.style.backgroundSize = 'cover';
+                }
+                const bgInput = document.getElementById('eventBgInput');
+                const uploadLabel = document.querySelector('label[for="eventBgInput"]');
+                const nameSpan = document.getElementById('eventBgName');
+                if (bgInput) {
+                    bgInput.value = '';
+                    // File selection handler
+                    bgInput.onchange = function(e) {
+                        const file = e.target.files[0];
+                        if (file) {
+                            const reader = new FileReader();
+                            reader.onload = function(evt) {
+                                const dataURL = evt.target.result;
+                                BackgroundManager.save(eventId, dataURL);
+                                container.style.backgroundImage = `url('${dataURL}')`;
+                                container.style.backgroundSize = 'cover';
+                            };
+                            reader.readAsDataURL(file);
+                            nameSpan.textContent = file.name;
+                            uploadLabel.style.display = 'none';
+                            removeBtn.style.display = 'inline-flex';
+                        }
+                    };
+                    // Remove button
+                    let removeBtn = document.getElementById('removeBgBtn');
+                    if (!removeBtn) {
+                        removeBtn = document.createElement('button');
+                        removeBtn.id = 'removeBgBtn';
+                        removeBtn.type = 'button';
+                        removeBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"> <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5-4h4m-2 0v4" /></svg> Remove`;
+                        removeBtn.className = 'inline-flex items-center px-3 py-2 bg-red-500 text-white rounded hover:bg-red-600 ml-2 text-sm';
+                        uploadLabel.parentNode.appendChild(removeBtn);
+                    }
+                    // Initial visibility
+                    if (savedBg) {
+                        uploadLabel.style.display = 'none';
+                        nameSpan.textContent = '';
+                        removeBtn.style.display = 'inline-flex';
+                    } else {
+                        uploadLabel.style.display = 'inline-flex';
+                        nameSpan.textContent = '';
+                        removeBtn.style.display = 'none';
+                    }
+                    // Remove handler
+                    removeBtn.onclick = function() {
+                        BackgroundManager.remove(eventId);
+                        container.style.backgroundImage = '';
+                        removeBtn.style.display = 'none';
+                        uploadLabel.style.display = 'inline-flex';
+                    };
+                }
                 viewEventModal.classList.remove('hidden');
             } else {
                 showErrorAlert('Error', 'Failed to load event details');
@@ -436,6 +493,19 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Error fetching event details for editing:', error);
             showErrorAlert('Error', 'Failed to load event details. Please try again.');
         });
+    }
+
+    // Background Manager
+    class BackgroundManager {
+        static save(eventId, dataURL) {
+            localStorage.setItem(`eventBg_${eventId}`, dataURL);
+        }
+        static load(eventId) {
+            return localStorage.getItem(`eventBg_${eventId}`);
+        }
+        static remove(eventId) {
+            localStorage.removeItem(`eventBg_${eventId}`);
+        }
     }
 
     // Helper Functions
