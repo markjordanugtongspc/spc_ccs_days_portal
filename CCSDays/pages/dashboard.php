@@ -34,26 +34,6 @@ $userInitials = strtoupper(substr($userName, 0, 1)) . (strpos($userName, ' ') !=
 		<link rel="stylesheet" href="./css/dashboard.css">
 		<!-- SweetAlert2 -->
 		<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-		<style>
-			/* Status badge styles for SweetAlert2 */
-			.swal2-html-container .status-badge {
-				font-size: 0.75rem;
-				padding: 0.125rem 0.5rem;
-				border-radius: 9999px;
-				font-weight: 500;
-				display: inline-block;
-			}
-			
-			.swal2-html-container .status-badge.approved {
-				background-color: rgba(16, 185, 129, 0.1);
-				color: #10b981;
-			}
-			
-			.swal2-html-container .status-badge.pending {
-				background-color: rgba(245, 158, 11, 0.1);
-				color: #f59e0b;
-			}
-		</style>
 	</head>
 	<body class="bg-dark-1 text-light">
 		<!-- Sidebar -->

@@ -4,6 +4,8 @@ document.addEventListener('DOMContentLoaded', function () {
     if (upcomingEventsContainer) {
         loadUpcomingEvents();
     }
+    // Initialize quick action buttons (includes Approve Events handler)
+    setupQuickActionButtons();
     // Form elements
     const loginForm = document.getElementById('loginForm');
     const emailInput = document.getElementById('email');
@@ -225,7 +227,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 // Show loading indicator
                 tabContent.innerHTML = `
                     <div class="flex justify-center items-center p-8">
-                        <svg class="animate-spin -ml-1 mr-3 h-8 w-8 text-teal-light" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <svg class="animate-spin -ml-1 mr-3 h-8 w-8 text-teal-light" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
@@ -437,7 +439,23 @@ document.addEventListener('DOMContentLoaded', function () {
         const approveEventsBtn = document.getElementById('approveEventsBtn');
         if (approveEventsBtn) {
             approveEventsBtn.addEventListener('click', function() {
-                window.location.href = 'events.php';
+                CCSModal.show({
+                    title: 'Approve All Events?',
+                    text: 'Are you sure you want to approve all pending events? This action cannot be undone.',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, Approve',
+                    cancelButtonText: 'Cancel',
+                }).then(result => {
+                    if (result.isConfirmed) {
+                        // TODO: Add your approval logic here
+                        CCSModal.show({
+                            title: 'Approved!',
+                            text: 'All events have been approved.',
+                            icon: 'success',
+                        });
+                    }
+                });
             });
         }
     }
@@ -816,3 +834,70 @@ document.addEventListener('DOMContentLoaded', function () {
             });
     }
 });
+
+// =============================
+// SweetAlert2 Popup Modal Class
+// =============================
+// This class provides a reusable method for showing SweetAlert2 modals
+// that match the dashboard's dark color palette and button spacing.
+class CCSModal {
+    /**
+     * Shows a SweetAlert2 modal with dark palette and spaced buttons.
+     * @param {Object} options - SweetAlert2 options (title, text, etc.)
+     * @returns {Promise} - SweetAlert2 result promise
+     */
+    static show(options) {
+        return Swal.fire({
+            // Defaults for dark palette
+            background: '#181c23', // fallback if CSS vars not available
+            color: '#e5e7eb', // fallback for light text
+            ...options,
+            customClass: {
+                popup: 'swal2-dark-popup',
+                confirmButton: 'swal2-confirm-dark',
+                cancelButton: 'swal2-cancel-dark',
+                actions: 'swal2-actions-spaced',
+                ...options.customClass
+            },
+            buttonsStyling: false // Use our custom classes
+        });
+    }
+}
+
+// =============================
+// SweetAlert2 Custom CSS Inject
+// =============================
+// Injects custom styles for SweetAlert2 dark modal and button spacing.
+(function injectSwal2DarkStyles() {
+    if (document.getElementById('swal2-dark-style')) return;
+    const style = document.createElement('style');
+    style.id = 'swal2-dark-style';
+    style.innerHTML = `
+        .swal2-dark-popup {
+            background: var(--color-dark-2, #181c23) !important;
+            color: var(--color-light, #e5e7eb) !important;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 32px 0 rgba(0,0,0,0.5);
+        }
+        .swal2-actions-spaced {
+            display: flex !important;
+            gap: 1rem !important;
+            justify-content: center;
+        }
+        .swal2-confirm-dark, .swal2-cancel-dark {
+            background: var(--color-dark-1, #23272f) !important;
+            color: var(--color-light, #e5e7eb) !important;
+            border: 1px solid rgba(134,185,176,0.3) !important;
+            border-radius: 0.375rem !important;
+            font-size: 1rem !important;
+            padding: 0.5rem 1.5rem !important;
+            margin: 0 0.25rem !important;
+            transition: background 0.2s;
+        }
+        .swal2-confirm-dark:hover, .swal2-cancel-dark:hover {
+            background: rgba(134,185,176,0.1) !important;
+            color: var(--color-teal-light, #5eead4) !important;
+        }
+    `;
+    document.head.appendChild(style);
+})();
