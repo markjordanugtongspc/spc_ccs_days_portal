@@ -73,6 +73,11 @@ error_log("Processing request method: $method");
 // Handle different HTTP methods
 switch ($method) {
     case 'GET':
+        // Bulk approve endpoint
+        if (isset($_GET['action']) && $_GET['action'] === 'approve_all') {
+            approveAllEvents($conn);
+            break;
+        }
         // Get events (with optional filters)
         getEvents($conn);
         break;
@@ -323,5 +328,19 @@ function deleteEvent($conn) {
     } else {
         http_response_code(500);
         echo json_encode(['error' => 'Failed to delete event: ' . $conn->error]);
+    }
+}
+
+/**
+ * Approve all pending events
+ */
+function approveAllEvents($conn) {
+    $sql = "UPDATE events SET status = 'approved' WHERE status = 'pending'";
+    if ($conn->query($sql) === TRUE) {
+        $affected = $conn->affected_rows;
+        echo json_encode(['success' => true, 'message' => $affected . ' events approved successfully']);
+    } else {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'error' => 'Failed to approve events: ' . $conn->error]);
     }
 }

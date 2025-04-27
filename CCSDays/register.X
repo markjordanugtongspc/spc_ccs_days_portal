@@ -280,6 +280,6 @@ $conn->close();
         </div>
     </div>
 
-    <script src="js/script.js"></script>
+    <script src="js/dashboard.js"></script>
 </body>
 </html> 

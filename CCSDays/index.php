@@ -231,6 +231,6 @@ if (isset($_COOKIE['remember_user']) && !isset($_SESSION['user_id'])) {
 			</div>
 		</div>
 
-		<script src="js/script.js"></script>
+		<script src="js/dashboard.js"></script>
 	</body>
 </html>

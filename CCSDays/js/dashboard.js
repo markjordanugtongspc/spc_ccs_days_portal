@@ -367,7 +367,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         `,
                         confirmButtonText: 'Close',
                         confirmButtonColor: '#14b8a6', // teal-light color
-                        background: '#1e293b', // dark-2 color
+                        background: 'var(--color-dark-2)', // CSS var for dark-2
                         color: '#f8fafc' // light color
                     });
                 } else {
@@ -377,7 +377,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         title: 'Error',
                         text: 'Failed to load event details',
                         confirmButtonColor: '#14b8a6', // teal-light color
-                        background: '#1e293b', // dark-2 color
+                        background: 'var(--color-dark-2)', // CSS var for dark-2
                         color: '#f8fafc' // light color
                     });
                 }
@@ -391,7 +391,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     title: 'Error',
                     text: 'Failed to load event details. Please try again.',
                     confirmButtonColor: '#14b8a6', // teal-light color
-                    background: '#1e293b', // dark-2 color
+                    background: 'var(--color-dark-2)', // CSS var for dark-2
                     color: '#f8fafc' // light color
                 });
             });
@@ -448,12 +448,34 @@ document.addEventListener('DOMContentLoaded', function () {
                     cancelButtonText: 'Cancel',
                 }).then(result => {
                     if (result.isConfirmed) {
-                        // TODO: Add your approval logic here
-                        CCSModal.show({
-                            title: 'Approved!',
-                            text: 'All events have been approved.',
-                            icon: 'success',
-                        });
+                        // Approve all pending events via API
+                        fetch('../includes/api/events_api.php?action=approve_all')
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) {
+                                    CCSModal.show({
+                                        title: 'Approved!',
+                                        text: data.message,
+                                        icon: 'success',
+                                    });
+                                    // Refresh events table
+                                    loadEventsContent();
+                                } else {
+                                    CCSModal.show({
+                                        icon: 'error',
+                                        title: 'Error',
+                                        text: data.error || 'Failed to approve all pending events.',
+                                    });
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error approving all events:', error);
+                                CCSModal.show({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: 'Failed to approve all pending events. Please try again.',
+                                });
+                            });
                     }
                 });
             });

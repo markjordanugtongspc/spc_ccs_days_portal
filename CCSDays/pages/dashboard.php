@@ -311,7 +311,7 @@ $userInitials = strtoupper(substr($userName, 0, 1)) . (strpos($userName, ' ') !=
 		</div>
 
 		<script src="../js/common.js"></script>
-		<script src="../js/script.js"></script>
+		<script src="../js/dashboard.js"></script>
 		<script>
 				// Update clock
 				function updateClock() {
