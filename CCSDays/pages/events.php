@@ -24,6 +24,8 @@ require_once '../includes/config.php';
 // Initialize variables
 $events = [];
 $pendingCount = 0;
+$approvedCount = 0;
+$totalCount = 0;
 
 // Check if database table exists
 $tableExists = false;
@@ -51,11 +53,15 @@ try {
                 }
             }
             
-            // Count pending events
+            // Count pending and approved events
             foreach ($events as $event) {
                 if ($event['status'] === 'pending') {
                     $pendingCount++;
                 }
+                if ($event['status'] === 'approved') {
+                    $approvedCount++;
+                }
+                $totalCount++;
             }
         }
         
@@ -89,12 +95,14 @@ if ($isPartial) {
                 <path stroke-linecap="round" stroke-linejoin="round" d="M3 8h18M3 12h18M3 16h18" />
             </svg>
             All Events
+            <span class="ml-2 bg-teal-light text-dark-1 px-2 py-0.5 rounded-full text-xs"><?php echo $totalCount; ?></span>
         </button>
         <button id="approvedEventsBtn" class="action-button flex items-center">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
             </svg>
             Approved Events
+            <span class="ml-2 bg-teal-light text-dark-1 px-2 py-0.5 rounded-full text-xs"><?php echo $approvedCount; ?></span>
         </button>
         <button id="pendingEventsBtn" class="action-button flex items-center">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-2">
@@ -345,12 +353,14 @@ if ($isPartial) {
                         <path stroke-linecap="round" stroke-linejoin="round" d="M3 8h18M3 12h18M3 16h18" />
                     </svg>
                     All Events
+                    <span class="ml-2 bg-teal-light text-dark-1 px-2 py-0.5 rounded-full text-xs"><?php echo $totalCount; ?></span>
                 </button>
                 <button id="approvedEventsBtn" class="action-button flex items-center">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                     </svg>
                     Approved Events
+                    <span class="ml-2 bg-teal-light text-dark-1 px-2 py-0.5 rounded-full text-xs"><?php echo $approvedCount; ?></span>
                 </button>
                 <button id="pendingEventsBtn" class="action-button flex items-center">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-2">
