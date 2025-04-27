@@ -20,6 +20,15 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     // Initial load of pending count
     refreshPendingApprovalsCount();
+    // Notification toast: show on click and auto-hide after 5s
+    const notifBtn = document.getElementById('notificationBadgeBtn');
+    const toastEl = document.getElementById('toast-notification');
+    if (notifBtn && toastEl) {
+        notifBtn.addEventListener('click', () => {
+            toastEl.classList.remove('hidden');
+            setTimeout(() => toastEl.classList.add('hidden'), 5000);
+        });
+    }
     // Form elements
     const loginForm = document.getElementById('loginForm');
     const emailInput = document.getElementById('email');
