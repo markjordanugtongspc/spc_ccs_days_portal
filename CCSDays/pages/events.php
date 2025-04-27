@@ -84,6 +84,18 @@ if ($isPartial) {
             </svg>
             Create Event
         </button>
+        <button id="allEventsBtn" class="action-button flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 8h18M3 12h18M3 16h18" />
+            </svg>
+            All Events
+        </button>
+        <button id="approvedEventsBtn" class="action-button flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+            Approved Events
+        </button>
         <button id="pendingEventsBtn" class="action-button flex items-center">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -103,7 +115,7 @@ if ($isPartial) {
                     <th class="px-4 py-3">Venue</th>
                     <th class="px-4 py-3">Status</th>
                     <th class="px-4 py-3">Reminder</th>
-                    <th class="px-4 py-3">Actions</th>
+                    <th class="px-4 py-2 text-center pl-4 pr-47">Actions</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-dark-3">
@@ -127,13 +139,34 @@ if ($isPartial) {
                             <td class="px-4 py-3"><?php echo $reminderStatus; ?></td>
                             <td class="px-4 py-3">
                                 <div class="flex gap-2">
-                                    <button class="icon-button view-event" data-id="<?php echo $event['id']; ?>">View</button>
+                                    <button class="icon-button view-event inline-flex items-center cursor-pointer bg-dark-1 text-teal-light px-2 py-1 rounded-full hover:bg-dark-3 transition-colors" data-id="<?php echo $event['id']; ?>">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5s8.268 2.943 9.542 7c-1.274 4.057-5.065 7-9.542 7s-8.268-2.943-9.542-7z" />
+                                        </svg>
+                                        View
+                                    </button>
                                     <?php if ($event['status'] === 'pending'): ?>
-                                        <button class="icon-button approve-event" data-id="<?php echo $event['id']; ?>">Approve</button>
+                                        <button class="icon-button approve-event inline-flex items-center cursor-pointer bg-dark-1 text-teal-light px-2 py-1 rounded-full hover:bg-dark-3 transition-colors" data-id="<?php echo $event['id']; ?>">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                                            </svg>
+                                            Approve
+                                        </button>
                                     <?php else: ?>
-                                        <button class="icon-button edit-event" data-id="<?php echo $event['id']; ?>">Edit</button>
+                                        <button class="icon-button edit-event inline-flex items-center cursor-pointer bg-dark-1 text-teal-light px-2 py-1 rounded-full hover:bg-dark-3 transition-colors" data-id="<?php echo $event['id']; ?>">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536M16.768 8.768L8 17.536V20h2.464l8.768-8.768-2.464-2.464z" />
+                                            </svg>
+                                            Edit
+                                        </button>
                                     <?php endif; ?>
-                                    <button class="icon-button delete-event" data-id="<?php echo $event['id']; ?>">Delete</button>
+                                    <button class="icon-button delete-event inline-flex items-center cursor-pointer bg-dark-1 text-teal-light px-2 py-1 rounded-full hover:bg-dark-3 transition-colors" data-id="<?php echo $event['id']; ?>">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5-4h4m-2 0v4m0 8v4m-4-4h8" />
+                                        </svg>
+                                        Delete
+                                    </button>
                                 </div>
                             </td>
                         </tr>
@@ -245,7 +278,7 @@ if ($isPartial) {
             </a>
             <a href="events.php" class="sidebar-link active">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 icon">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5m-9-6h.008v.008H12v-.008zM12 15h.008v.008H12V15zm0 2.25h.008v.008H12v-.008zM9.75 15h.008v.008H9.75V15zm0 2.25h.008v.008H9.75v-.008zM7.5 15h.008v.008H7.5V15zm0 2.25h.008v.008H7.5v-.008zm6.75-4.5h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008v-.008zm2.25-4.5h.008v.008H16.5v-.008zm0 2.25h.008v.008H16.5V15z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0121 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5m-9-6h.008v.008H12v-.008zM12 15h.008v.008H12V15zm0 2.25h.008v.008H12v-.008zm6.75-4.5h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008v-.008zm2.25-4.5h.008v.008H16.5v-.008zm0 2.25h.008v.008H16.5V15z" />
                 </svg>
                 Events
             </a>
@@ -257,7 +290,7 @@ if ($isPartial) {
             </a>
             <a href="#" class="sidebar-link">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 icon">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.125.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076-.124a6.57 6.57 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z" />
                     <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
                 Settings
@@ -307,6 +340,18 @@ if ($isPartial) {
                     </svg>
                     Create Event
                 </button>
+                <button id="allEventsBtn" class="action-button flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 8h18M3 12h18M3 16h18" />
+                    </svg>
+                    All Events
+                </button>
+                <button id="approvedEventsBtn" class="action-button flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                    Approved Events
+                </button>
                 <button id="pendingEventsBtn" class="action-button flex items-center">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -326,7 +371,7 @@ if ($isPartial) {
                             <th class="px-4 py-3">Venue</th>
                             <th class="px-4 py-3">Status</th>
                             <th class="px-4 py-3">Reminder</th>
-                            <th class="px-4 py-3">Actions</th>
+                            <th class="px-4 py-3 text-center pl-4 pr-47">Actions</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-dark-3">
@@ -350,13 +395,34 @@ if ($isPartial) {
                                     <td class="px-4 py-3"><?php echo $reminderStatus; ?></td>
                                     <td class="px-4 py-3">
                                         <div class="flex gap-2">
-                                            <button class="icon-button view-event" data-id="<?php echo $event['id']; ?>">View</button>
+                                            <button class="icon-button view-event inline-flex items-center cursor-pointer bg-dark-1 text-teal-light px-2 py-1 rounded-full hover:bg-dark-3 transition-colors" data-id="<?php echo $event['id']; ?>">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5s8.268 2.943 9.542 7c-1.274 4.057-5.065 7-9.542 7s-8.268-2.943-9.542-7z" />
+                                                </svg>
+                                                View
+                                            </button>
                                             <?php if ($event['status'] === 'pending'): ?>
-                                                <button class="icon-button approve-event" data-id="<?php echo $event['id']; ?>">Approve</button>
+                                                <button class="icon-button approve-event inline-flex items-center cursor-pointer bg-dark-1 text-teal-light px-2 py-1 rounded-full hover:bg-dark-3 transition-colors" data-id="<?php echo $event['id']; ?>">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                                                    </svg>
+                                                    Approve
+                                                </button>
                                             <?php else: ?>
-                                                <button class="icon-button edit-event" data-id="<?php echo $event['id']; ?>">Edit</button>
+                                                <button class="icon-button edit-event inline-flex items-center cursor-pointer bg-dark-1 text-teal-light px-2 py-1 rounded-full hover:bg-dark-3 transition-colors" data-id="<?php echo $event['id']; ?>">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536M16.768 8.768L8 17.536V20h2.464l8.768-8.768-2.464-2.464z" />
+                                                    </svg>
+                                                    Edit
+                                                </button>
                                             <?php endif; ?>
-                                            <button class="icon-button delete-event" data-id="<?php echo $event['id']; ?>">Delete</button>
+                                            <button class="icon-button delete-event inline-flex items-center cursor-pointer bg-dark-1 text-teal-light px-2 py-1 rounded-full hover:bg-dark-3 transition-colors" data-id="<?php echo $event['id']; ?>">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5-4h4m-2 0v4m0 8v4m-4-4h8" />
+                                                </svg>
+                                                Delete
+                                            </button>
                                         </div>
                                     </td>
                                 </tr>
@@ -452,8 +518,14 @@ if ($isPartial) {
                 <div id="eventDetails" class="py-4 select-text">
                     <!-- Event details will be populated here -->
                 </div>
-                <div class="flex justify-end pt-3 border-t border-dark-3">
-                    <button type="button" class="modal-close px-6 bg-teal-light p-3 rounded-lg text-dark-1 hover:bg-teal-dark font-bold transition-all">Close</button>
+                <div class="flex justify-between items-center pt-3 border-t border-dark-3">
+                    <button type="button" class="edit-event inline-flex items-center cursor-pointer bg-dark-1 text-teal-light px-6 py-3 rounded-full hover:bg-dark-3 transition-all cursor-pointer">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536M16.768 8.768L8 17.536V20h2.464l8.768-8.768-2.464-2.464z" />
+                        </svg>
+                        Edit
+                    </button>
+                    <button type="button" class="modal-close inline-flex items-center px-6 py-3 bg-red-500 text-white rounded-full hover:bg-red-600 font-bold transition-all cursor-pointer">Close</button>
                 </div>
             </div>
         </div>

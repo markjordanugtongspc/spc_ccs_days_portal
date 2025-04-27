@@ -238,7 +238,21 @@ function createEvent($conn) {
 function updateEvent($conn) {
     // Get JSON data from request body
     $data = json_decode(file_get_contents('php://input'), true);
-    
+
+    // If only status provided (approve action), update status only
+    if (isset($data['id'], $data['status']) && !isset($data['name'], $data['date'], $data['venue'])) {
+        $id = $conn->real_escape_string($data['id']);
+        $status = $conn->real_escape_string($data['status']);
+        $sql = "UPDATE events SET status = '$status' WHERE id = $id";
+        if ($conn->query($sql) === TRUE) {
+            echo json_encode(['success' => true, 'message' => 'Event approved successfully', 'data' => ['id' => $id, 'status' => $status]]);
+        } else {
+            http_response_code(500);
+            echo json_encode(['error' => 'Failed to update status: ' . $conn->error]);
+        }
+        return;
+    }
+
     // Validate required fields
     if (!isset($data['id']) || !isset($data['name']) || !isset($data['date']) || !isset($data['venue'])) {
         http_response_code(400);

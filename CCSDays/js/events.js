@@ -51,6 +51,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // DOM elements
     const createEventBtn = document.getElementById('createEventBtn');
     const pendingEventsBtn = document.getElementById('pendingEventsBtn');
+    const allEventsBtn = document.getElementById('allEventsBtn');
+    const approvedEventsBtn = document.getElementById('approvedEventsBtn');
     const createEventModal = document.getElementById('createEventModal');
     const viewEventModal = document.getElementById('viewEventModal');
     const modalCloseButtons = document.querySelectorAll('.modal-close');
@@ -79,6 +81,18 @@ document.addEventListener('DOMContentLoaded', function() {
     if (pendingEventsBtn) {
         pendingEventsBtn.addEventListener('click', () => {
             filterEventsByStatus('pending');
+        });
+    }
+
+    if (allEventsBtn) {
+        allEventsBtn.addEventListener('click', () => {
+            filterEventsByStatus('all');
+        });
+    }
+
+    if (approvedEventsBtn) {
+        approvedEventsBtn.addEventListener('click', () => {
+            filterEventsByStatus('approved');
         });
     }
 
