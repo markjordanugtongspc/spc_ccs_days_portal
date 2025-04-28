@@ -328,16 +328,39 @@ document.addEventListener('DOMContentLoaded', function () {
                                     ${event.formatted_date}
                                 </div>
                             </div>
-                            <button class="action-button view-event-details" data-id="${event.id}">Details</button>
+                            <div class="visit-actions flex gap-2 mt-2">
+                                <button class="action-button view-event" data-id="${event.id}">View</button>
+                                ${event.status === 'pending' ? `<button class="action-button approve-event" data-id="${event.id}">Approve</button>` : ''}
+                                <button class="action-button edit-event" data-id="${event.id}">Edit</button>
+                                <button class="action-button delete-event" data-id="${event.id}">Delete</button>
+                            </div>
                         `;
                         eventsContainer.appendChild(eventElement);
                     });
                     
                     // Add event listeners to detail buttons
-                    document.querySelectorAll('.view-event-details').forEach(button => {
+                    document.querySelectorAll('.view-event').forEach(button => {
                         button.addEventListener('click', function() {
                             const eventId = this.getAttribute('data-id');
                             viewEventDetails(eventId);
+                        });
+                    });
+                    document.querySelectorAll('.approve-event').forEach(button => {
+                        button.addEventListener('click', function() {
+                            const eventId = this.getAttribute('data-id');
+                            approveEventDashboard(eventId);
+                        });
+                    });
+                    document.querySelectorAll('.edit-event').forEach(button => {
+                        button.addEventListener('click', function() {
+                            const eventId = this.getAttribute('data-id');
+                            window.location.href = `events.php?edit=true&id=${eventId}`;
+                        });
+                    });
+                    document.querySelectorAll('.delete-event').forEach(button => {
+                        button.addEventListener('click', function() {
+                            const eventId = this.getAttribute('data-id');
+                            deleteEventDashboard(eventId);
                         });
                     });
                 } else {
@@ -869,11 +892,20 @@ document.addEventListener('DOMContentLoaded', function () {
                 const tabContent = document.getElementById('tab-content');
                 tabContent.innerHTML = html;
                 
-                if (typeof window.initializeEventsPage === 'function') {
-                    window.initializeEventsPage();
-                } else {
-                    console.error('Events page initialization function not found');
-                }
+                // Attach action handlers for event actions in loaded table
+                const container = tabContent;
+                container.querySelectorAll('.view-event').forEach(button => {
+                    button.addEventListener('click', () => viewEventDetails(button.dataset.id));
+                });
+                container.querySelectorAll('.edit-event').forEach(button => {
+                    button.addEventListener('click', () => window.location.href = `events.php?edit=true&id=${button.dataset.id}`);
+                });
+                container.querySelectorAll('.approve-event').forEach(button => {
+                    button.addEventListener('click', () => approveEventDashboard(button.dataset.id));
+                });
+                container.querySelectorAll('.delete-event').forEach(button => {
+                    button.addEventListener('click', () => deleteEventDashboard(button.dataset.id));
+                });
             })
             .catch(error => {
                 console.error('Error loading events content:', error);
@@ -881,6 +913,93 @@ document.addEventListener('DOMContentLoaded', function () {
             });
     }
 });
+
+// Function to approve an event from dashboard
+function approveEventDashboard(eventId) {
+    Swal.fire({
+        icon: 'question',
+        title: 'Approve Event',
+        text: 'Are you sure you want to approve this event?',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, Approve',
+        cancelButtonText: 'Cancel'
+    }).then(result => {
+        if (result.isConfirmed) {
+            fetch('../includes/api/events_api.php', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: eventId, status: 'approved' })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({ icon: 'success', title: 'Approved!', text: 'Event approved successfully' })
+                      .then(() => loadUpcomingEvents());
+                } else {
+                    Swal.fire({ icon: 'error', title: 'Error', text: data.error || 'Failed to approve event' });
+                }
+            })
+            .catch(() => Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to approve event. Please try again.' }));
+        }
+    });
+}
+
+// Function to delete an event from dashboard
+function deleteEventDashboard(eventId) {
+    Swal.fire({
+        icon: 'warning',
+        title: 'Delete Event',
+        text: 'Are you sure you want to delete this event? This action cannot be undone.',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, Delete',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#14b8a6',
+        cancelButtonColor: '#6b7280',
+        background: 'var(--color-dark-2)',
+        color: '#f8fafc'
+    }).then(result => {
+        if (result.isConfirmed) {
+            fetch('../includes/api/events_api.php', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: eventId })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Deleted!',
+                        text: 'Event deleted successfully',
+                        confirmButtonText: 'OK',
+                        confirmButtonColor: '#14b8a6',
+                        background: 'var(--color-dark-2)',
+                        color: '#f8fafc'
+                    }).then(() => loadUpcomingEvents());
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.error || 'Failed to delete event',
+                        confirmButtonText: 'Close',
+                        confirmButtonColor: '#14b8a6',
+                        background: 'var(--color-dark-2)',
+                        color: '#f8fafc'
+                    });
+                }
+            })
+            .catch(() => Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Failed to delete event. Please try again.',
+                confirmButtonText: 'Close',
+                confirmButtonColor: '#14b8a6',
+                background: 'var(--color-dark-2)',
+                color: '#f8fafc'
+            }));
+        }
+    });
+}
 
 // =============================
 // SweetAlert2 Popup Modal Class

@@ -317,6 +317,8 @@ $userInitials = strtoupper(substr($userName, 0, 1)) . (strpos($userName, ' ') !=
 		<script src="../js/common.js"></script>
 		<script src="../js/dashboard.js"></script>
 		<script src="https://cdn.jsdelivr.net/npm/flowbite@3.1.2/dist/flowbite.min.js"></script>
+
+<!-- Temporary Commented Out to Fix Glitching
 		<script>
 				// Update clock
 				function updateClock() {
@@ -368,7 +370,8 @@ $userInitials = strtoupper(substr($userName, 0, 1)) . (strpos($userName, ' ') !=
 				
 				// Update clock every second
 				setInterval(updateClock, 1000);
-		</script>
+		</script> -->
+
 		<!-- Flowbite Notification Toast -->
 		<div id="toast-notification" class="hidden fixed bottom-5 right-5 w-full max-w-xs p-4 text-gray-900 bg-white rounded-lg shadow-sm dark:bg-gray-800 dark:text-gray-300" role="alert">
 			<div class="flex items-center mb-3">
