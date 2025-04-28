@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const startScannerBtn = document.getElementById('startScanner');
     const stopScannerBtn = document.getElementById('stopScanner');
     const scanResult = document.getElementById('scanResult');
-    let html5QrCode;
+    let html5QrCodeScanner;
     
     // Tab switching functionality
     const tabItems = document.querySelectorAll('.tab-item');
@@ -38,61 +38,66 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    startScannerBtn.addEventListener('click', function() {
-        html5QrCode = new Html5Qrcode("qr-video");
-        const qrCodeSuccessCallback = (decodedText, decodedResult) => {
-            // Handle the scanned code
-            scanResult.innerHTML = `
-                <div class="flex items-center justify-between success-scan rounded-lg p-4 text-light">
-                    <div>
-                        <div class="font-medium">Student ID: ${decodedText}</div>
-                        <div class="text-sm text-gray-400">Scanned at: ${new Date().toLocaleTimeString()}</div>
-                    </div>
-                    <div class="status-badge-signin">
-                        Success
-                    </div>
-                </div>
-            `;
-            
-            // Stop scanning
-            html5QrCode.stop();
-            startScannerBtn.disabled = false;
-            stopScannerBtn.disabled = true;
-            
-            // Show a notification
-            showNotification(`Student ID ${decodedText} scanned successfully!`, 'success');
-        };
-        
-        const config = { fps: 10, qrbox: { width: 250, height: 250 } };
-        
-        // Start scanning
-        html5QrCode.start({ facingMode: "environment" }, config, qrCodeSuccessCallback)
-            .then(() => {
-                startScannerBtn.disabled = true;
-                stopScannerBtn.disabled = false;
+    // Add camera preview functions
+    let cameraStream;
+    function startCameraPreview() {
+        const video = document.getElementById('qr-preview');
+        video.classList.remove('hidden');
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            showNotification('Camera not supported', 'error');
+            return;
+        }
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+            .then(stream => {
+                cameraStream = stream;
+                video.srcObject = stream;
+                return video.play();
             })
             .catch(err => {
-                scanResult.innerHTML = `
-                    <div class="flex items-center justify-between error-scan rounded-lg p-4 text-light">
-                        <div>
-                            <div class="font-medium">Error starting scanner</div>
-                            <div class="text-sm text-gray-400">${err}</div>
-                        </div>
-                        <div class="status-badge-signout">
-                            Error
-                        </div>
-                    </div>
-                `;
+                console.error('Error accessing camera:', err);
+                showNotification('Error accessing camera', 'error');
             });
-    });
-    
-    stopScannerBtn.addEventListener('click', function() {
-        if (html5QrCode) {
-            html5QrCode.stop().then(() => {
-                startScannerBtn.disabled = false;
-                stopScannerBtn.disabled = true;
-            });
+    }
+
+    function stopCameraPreview() {
+        if (cameraStream) {
+            cameraStream.getTracks().forEach(track => track.stop());
+            cameraStream = null;
         }
+        const video = document.getElementById('qr-preview');
+        if (video) {
+            video.srcObject = null;
+            video.classList.add('hidden');
+        }
+    }
+
+    startScannerBtn.addEventListener('click', function() {
+        Swal.fire({
+            title: 'Enable Camera?',
+            text: 'Allow camera access for QR scanning.',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Enable',
+            cancelButtonText: 'Cancel',
+            customClass: {
+                popup: 'bg-dark-1 text-light',
+                confirmButton: 'bg-teal-900 text-teal-light px-4 py-2 rounded-md',
+                cancelButton: 'bg-dark-3 text-light px-4 py-2 rounded-md'
+            },
+            buttonsStyling: false
+        }).then((result) => {
+            if (result.isConfirmed) {
+                startCameraPreview();
+                startScannerBtn.disabled = true;
+                stopScannerBtn.disabled = false;
+            }
+        });
+    });
+
+    stopScannerBtn.addEventListener('click', function() {
+        stopCameraPreview();
+        startScannerBtn.disabled = false;
+        stopScannerBtn.disabled = true;
     });
     
     // Manual sign in/out buttons

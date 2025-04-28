@@ -13,6 +13,7 @@
 		<link rel="stylesheet" href="./css/common.css">
 		<link rel="stylesheet" href="./css/scanner.css">
 		<script src="https://unpkg.com/html5-qrcode"></script>
+		<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 		<script defer src="../js/scanner.js"></script>
 	</head>
 	<body class="bg-dark-1 text-light">
@@ -118,7 +119,7 @@
 					<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 						<div class="lg:col-span-2 bg-dark-2 rounded-lg p-6">
 							<div class="aspect-video bg-dark-1 rounded-lg relative overflow-hidden mb-6">
-								<video id="qr-video" class="absolute inset-0 w-full h-full object-cover"></video>
+								<video id="qr-preview" class="hidden absolute inset-0 w-full h-full object-cover" autoplay muted playsinline></video>
 								<div class="absolute inset-0 flex items-center justify-center">
 									<div class="w-64 h-64 relative">
 										<div class="scanner-corner absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-teal-light"></div>
