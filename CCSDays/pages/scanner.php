@@ -181,7 +181,7 @@
 				<div class="manual-content hidden">
 					<div class="flex items-center mb-6">
 						<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 mr-2 text-teal-light">
-							<path stroke-linecap="round" stroke-linejoin="round" d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5zm6-10.125a1.875 1.875 0 11-3.75 0 1.875 1.875 0 013.75 0zm1.294 6.336a6.721 6.721 0 01-3.17.789 6.721 6.721 0 01-3.168-.789 3.376 3.376 0 016.338 0z" />
+							<path stroke-linecap="round" stroke-linejoin="round" d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
 						</svg>
 						<h2 class="text-xl font-medium">Bulk Student Entry</h2>
 					</div>
@@ -193,16 +193,6 @@
 								<div class="mb-4">
 									<label for="bulkStudentId" class="block text-sm font-medium text-gray-400 mb-1">Student ID</label>
 									<input type="text" id="bulkStudentId" class="w-full bg-dark-1 border border-dark-4 rounded-md px-3 py-2 text-light focus:outline-none focus:ring-1 focus:ring-teal-light" placeholder="Enter student ID">
-								</div>
-								<div class="mb-4">
-									<label class="block text-sm font-medium text-gray-400 mb-1">Event</label>
-									<select class="w-full bg-dark-1 border border-dark-4 rounded-md px-3 py-2 text-light focus:outline-none focus:ring-1 focus:ring-teal-light">
-										<option value="">Select an event</option>
-										<option>Programming Competition</option>
-										<option>Web Development Workshop</option>
-										<option>Industry Talk: AI Trends</option>
-										<option>Mobile App Development Seminar</option>
-									</select>
 								</div>
 								<div class="mb-4">
 									<label class="block text-sm font-medium text-gray-400 mb-1">Status</label>
@@ -234,7 +224,7 @@
 										<input type="file" id="csvFile" accept=".csv" class="sr-only">
 										<label for="csvFile" class="flex items-center justify-center w-full px-4 py-2 bg-dark-1 border border-dashed border-dark-4 rounded-md text-gray-400 cursor-pointer hover:bg-dark-3 transition-colors">
 											<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-2">
-												<path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+												<path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
 											</svg>
 											<span>Click to upload CSV file</span>
 										</label>
@@ -336,4 +326,4 @@
 
 		<script src="../js/common.js"></script>
 	</body>
-</html> 
+</html>
