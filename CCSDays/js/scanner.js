@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const startScannerBtn = document.getElementById('startScanner');
     const stopScannerBtn = document.getElementById('stopScanner');
     const scanResult = document.getElementById('scanResult');
-    let html5QrCodeScanner;
+    let html5QrCode;
     
     // Tab switching functionality
     const tabItems = document.querySelectorAll('.tab-item');
@@ -38,66 +38,258 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Add camera preview functions
-    let cameraStream;
-    function startCameraPreview() {
-        const video = document.getElementById('qr-preview');
-        video.classList.remove('hidden');
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-            showNotification('Camera not supported', 'error');
+    // Initialize Html5Qrcode scanner
+    // Wait until the DOM is fully loaded to initialize QR scanner
+    setTimeout(() => {
+        try {
+            html5QrCode = new Html5Qrcode("reader");
+            console.log("HTML5 QR Code scanner initialized successfully");
+        } catch (error) {
+            console.error("Error initializing QR scanner:", error);
+        }
+    }, 500);
+
+    // Utility to display QR scan results and errors
+    function showScanMessage(message, isError = false) {
+        // Clear any previous error messages
+        const prevError = document.getElementById('qrError');
+        if (prevError) prevError.remove();
+        
+        if (isError) {
+            showNotification(message, 'error');
+            console.error('QR scan error:', message);
+            
+            // Display inline error message
+            const errorDiv = document.createElement('div');
+            errorDiv.id = 'qrError';
+            errorDiv.className = 'text-red-500 mt-2';
+            errorDiv.textContent = message;
+            scanResult.innerHTML = '';
+            scanResult.appendChild(errorDiv);
+        } else {
+            // For success messages, directly update the scan result content
+            // and clear any existing error spans
+            scanResult.innerHTML = '';
+            const resultText = document.createElement('span');
+            resultText.className = 'text-light';
+            resultText.textContent = message;
+            scanResult.appendChild(resultText);
+        }
+    }
+
+    // Override start button to use html5-qrcode with facingMode
+startScannerBtn.addEventListener('click', function() {
+    // Clear any previous results
+    scanResult.innerHTML = '<span class="text-gray-500">Initializing camera...</span>';
+    
+    // Check if scanner is already initialized
+    if (!html5QrCode) {
+        try {
+            html5QrCode = new Html5Qrcode("reader");
+            console.log("QR scanner initialized on demand");
+        } catch (err) {
+            showScanMessage(`Failed to initialize scanner: ${err}`, true);
             return;
         }
-        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
-            .then(stream => {
-                cameraStream = stream;
-                video.srcObject = stream;
-                return video.play();
-            })
-            .catch(err => {
-                console.error('Error accessing camera:', err);
-                showNotification('Error accessing camera', 'error');
-            });
     }
-
-    function stopCameraPreview() {
-        if (cameraStream) {
-            cameraStream.getTracks().forEach(track => track.stop());
-            cameraStream = null;
-        }
-        const video = document.getElementById('qr-preview');
-        if (video) {
-            video.srcObject = null;
-            video.classList.add('hidden');
-        }
-    }
-
-    startScannerBtn.addEventListener('click', function() {
-        Swal.fire({
-            title: 'Enable Camera?',
-            text: 'Allow camera access for QR scanning.',
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonText: 'Enable',
-            cancelButtonText: 'Cancel',
-            customClass: {
-                popup: 'bg-dark-1 text-light',
-                confirmButton: 'bg-teal-900 text-teal-light px-4 py-2 rounded-md',
-                cancelButton: 'bg-dark-3 text-light px-4 py-2 rounded-md'
-            },
-            buttonsStyling: false
-        }).then((result) => {
-            if (result.isConfirmed) {
-                startCameraPreview();
-                startScannerBtn.disabled = true;
-                stopScannerBtn.disabled = false;
+    
+    // Start scanning directly with facingMode
+    html5QrCode.start(
+        { facingMode: 'environment' },
+        { fps: 64, qrbox: { width: 480, height: 480 } }, // box change here
+        (decodedText, decodedResult) => {
+            console.log('Decoded:', decodedText);
+            
+            // Play a success sound
+            const success = new Audio('../assets/audio/success.mp3');
+            try {
+                success.play().catch(e => console.log('Audio play error:', e));
+            } catch (e) {
+                console.log('Audio error:', e);
             }
-        });
-    });
+            
+            // Show the decoded text in the scan result area
+            showScanMessage(decodedText);
 
+            // Send the scanned QR code to the backend API
+            fetch('../includes/api/attendance_handler.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded', // Suitable for simple key-value pairs
+                },
+                body: 'qr_code=' + encodeURIComponent(decodedText) // Send qr_code=value
+            })
+            .then(response => {
+                if (!response.ok) {
+                    // Handle HTTP errors (e.g., 404, 500)
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json(); // Parse the JSON response body
+            })
+            .then(data => {
+                // Create and show a toast notification with the API response
+                const toastElement = document.createElement('div');
+                toastElement.id = 'qr-toast-container';
+                
+                // Determine sign-out vs sign-in for color palette
+                const isSignOut = data.success && data.message.toLowerCase().includes('signed out');
+                const toastClass = data.success 
+                    ? (isSignOut ? 'text-red-500' : 'text-teal-500') 
+                    : 'text-red-500';
+                const iconPath = data.success
+                    ? 'M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z'  // check icon
+                    : 'M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z';  // error icon
+                const iconSrText = data.success 
+                    ? (isSignOut ? 'Sign-out icon' : 'Success icon') 
+                    : 'Error icon';
+                const message = data.message || (data.success ? 'Operation successful.' : 'An unknown error occurred.'); // Use API message or default
+
+                toastElement.innerHTML = `
+                    <div id="toast-dynamic" class="fixed bottom-5 right-5 flex items-center w-full max-w-xs p-4 mb-4 ${toastClass} bg-dark-2 rounded-lg shadow z-50" role="alert">
+                        <div class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8 ${toastClass} bg-dark-2 rounded-lg">
+                            <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+                                 <path stroke-linecap="round" stroke-linejoin="round" d="${iconPath}" />
+                             </svg>
+                            <span class="sr-only">${iconSrText}</span>
+                        </div>
+                        <div class="ms-3 text-sm font-normal">${message}</div>
+                        <button type="button" id="close-toast" class="ms-auto -mx-1.5 -my-1.5 bg-dark-2 ${toastClass} hover:text-gray-900 rounded-lg focus:ring-2 focus:ring-gray-300 p-1.5 hover:bg-gray-100 inline-flex items-center justify-center cursor-pointer h-8 w-8" aria-label="Close">
+                            <span class="sr-only">Close</span>
+                            <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+                            </svg>
+                        </button>
+                    </div>
+                `;
+                 // Make sure the toast container doesn't already exist before appending
+                 const existingToast = document.getElementById('qr-toast-container');
+                 if (existingToast) {
+                     existingToast.remove();
+                 }
+                document.body.appendChild(toastElement);
+
+                // Add event listener to close button
+                const closeButton = document.getElementById('close-toast');
+                if (closeButton) {
+                    closeButton.addEventListener('click', function() {
+                        const toastContainer = document.getElementById('qr-toast-container');
+                        if (toastContainer) {
+                            toastContainer.remove();
+                        }
+                    });
+                }
+
+                // Optional: Auto-close the toast after a few seconds
+                setTimeout(() => {
+                     const toastContainer = document.getElementById('qr-toast-container');
+                     if (toastContainer) {
+                         toastContainer.remove();
+                     }
+                }, 5000); // Auto-close after 5 seconds
+
+            })
+            .catch(error => {
+                console.error('Fetch Error:', error);
+                 // Show an error toast if the fetch itself failed
+                 const toastElement = document.createElement('div');
+                 toastElement.id = 'qr-toast-container';
+                 toastElement.innerHTML = `
+                     <div id="toast-fetch-error" class="fixed bottom-5 right-5 flex items-center w-full max-w-xs p-4 mb-4 text-red-500 bg-dark-2 rounded-lg shadow z-50" role="alert">
+                        <div class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8 text-red-500 bg-dark-2 rounded-lg">
+                             <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+                                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                             </svg>
+                             <span class="sr-only">Error icon</span>
+                         </div>
+                         <div class="ms-3 text-sm font-normal">API Error: ${error.message}</div>
+                         <button type="button" id="close-toast" class="ms-auto -mx-1.5 -my-1.5 bg-dark-2 text-red-500 hover:text-gray-900 rounded-lg focus:ring-2 focus:ring-gray-300 p-1.5 hover:bg-gray-100 inline-flex items-center justify-center cursor-pointer h-8 w-8" aria-label="Close">
+                             <span class="sr-only">Close</span>
+                             <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+                                 <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+                             </svg>
+                         </button>
+                     </div>
+                 `;
+                 // Remove existing toast before adding new one
+                 const existingToast = document.getElementById('qr-toast-container');
+                  if (existingToast) {
+                      existingToast.remove();
+                  }
+                 document.body.appendChild(toastElement);
+
+                 // Add close functionality here too
+                const closeButton = document.getElementById('close-toast');
+                if (closeButton) {
+                     closeButton.addEventListener('click', function() {
+                         const toastContainer = document.getElementById('qr-toast-container');
+                         if (toastContainer) {
+                             toastContainer.remove();
+                         }
+                     });
+                }
+                 // Optional: Auto-close
+                 setTimeout(() => {
+                     const toastContainer = document.getElementById('qr-toast-container');
+                      if (toastContainer) {
+                          toastContainer.remove();
+                      }
+                  }, 5000);
+            });
+
+            // Log the result sent to the API
+            console.log('Full result sent to API:', decodedResult);
+
+            // Stop scanning after successful reading to prevent multiple scans
+            html5QrCode.stop().catch(err => console.error("Error stopping scanner:", err));
+            startScannerBtn.disabled = false;
+            stopScannerBtn.disabled = true;
+
+            // You might want to do something with the decoded result,
+            // such as automatically signing in/out a student
+            console.log('Full result:', decodedResult);
+        },
+        (errorMessage) => {
+            // Only log severe errors, ignore normal camera processing messages
+            if (errorMessage.includes('Failed to access')) {
+                console.warn('Camera access error:', errorMessage);
+            }
+        }
+    ).then(() => {
+        console.log('QR scanning started');
+        startScannerBtn.disabled = true;
+        stopScannerBtn.disabled = false;
+        scanResult.innerHTML = '<span class="text-gray-500">Camera active. Scan a QR code...</span>';
+    }).catch(err => {
+        console.error('QR start error:', err);
+        
+        // Provide more user-friendly error messages
+        let errorMsg = `Unable to start scanner: ${err}`;
+        if (err.toString().includes('NotFoundError')) {
+            errorMsg = 'No camera found. Please connect a camera and try again.';
+        } else if (err.toString().includes('NotAllowedError')) {
+            errorMsg = 'Camera access denied. Please allow camera access and try again.';
+        } else if (err.toString().includes('NotReadableError')) {
+            errorMsg = 'Camera is in use by another application. Please close other apps using the camera.';
+        }
+        showScanMessage(errorMsg, true);
+    });
+});
+
+    // Override stop button to stop html5-qrcode scanning
     stopScannerBtn.addEventListener('click', function() {
-        stopCameraPreview();
-        startScannerBtn.disabled = false;
-        stopScannerBtn.disabled = true;
+        if (!html5QrCode) {
+            console.warn('QR scanner not initialized');
+            return;
+        }
+        
+        html5QrCode.stop().then(() => {
+            startScannerBtn.disabled = false;
+            stopScannerBtn.disabled = true;
+            scanResult.innerHTML = '<span class="text-gray-500">Scanner stopped</span>';
+        }).catch(err => {
+            console.error('QR stop error:', err);
+            showScanMessage('Unable to stop scanner', true);
+        });
     });
     
     // Manual sign in/out buttons
@@ -344,7 +536,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             </div>
                             <button class="delete-entry text-gray-400 hover:text-red-400" data-id="${entry.id}">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12M7 7l6-6M7 7l-6 6"/>
                                 </svg>
                             </button>
                         </div>

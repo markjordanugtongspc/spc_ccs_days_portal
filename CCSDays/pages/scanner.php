@@ -1,3 +1,59 @@
+<?php
+date_default_timezone_set('Asia/Manila');
+session_start();
+$qrCodeValue = '';
+
+// Check if we need to refresh the page
+if (isset($_GET['refresh']) && $_GET['refresh'] === 'true') {
+    // Get the QR code value if provided
+    if (isset($_GET['qr'])) {
+        $qrCodeValue = htmlspecialchars($_GET['qr']);
+        
+        // Store the QR code value in session to persist after refresh
+        $_SESSION['last_scanned_qr'] = $qrCodeValue;
+        
+        // You can add your processing logic here
+        // For example: update database, log attendance, etc.
+        
+        // Redirect to self without the GET parameters to avoid refresh loop
+        header("Location: scanner.php");
+        exit;
+    }
+}
+
+// Check if we have a stored QR code value from previous scan
+if (isset($_SESSION['last_scanned_qr'])) {
+    $qrCodeValue = $_SESSION['last_scanned_qr'];
+    
+    // Optional: Clear the session variable after using it once
+    // Uncomment if you want to clear after one display
+    // unset($_SESSION['last_scanned_qr']);
+}
+
+
+
+// pull all attendance logs joined to students
+require_once __DIR__ . '/../includes/config.php';
+$pdo = getDbConnection();
+$sql = "
+  SELECT
+	a.Attendance_ID,
+	a.Student_ID,
+	a.QR_Code,
+	a.Sign_In_Time,
+	a.Sign_Out_Time,
+	s.Name,
+	s.Year
+  FROM attendance a
+  JOIN students s ON a.Student_ID = s.Student_ID
+  ORDER BY a.Attendance_ID DESC
+  LIMIT 6
+";
+$stmt = $pdo->prepare($sql);
+$stmt->execute();
+$recentEntries = $stmt->fetchAll(PDO::FETCH_ASSOC);
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 	<head>
@@ -12,9 +68,11 @@
 		<link rel="stylesheet" href="../styles.css">
 		<link rel="stylesheet" href="./css/common.css">
 		<link rel="stylesheet" href="./css/scanner.css">
-		<script src="https://unpkg.com/html5-qrcode"></script>
+		<link href="https://cdn.jsdelivr.net/npm/flowbite@3.1.2/dist/flowbite.min.css" rel="stylesheet" />
+		<!-- <script src="https://unpkg.com/html5-qrcode"></script> -->
 		<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-		<script defer src="../js/scanner.js"></script>
+		<!-- Load QR library from node_modules -->
+		<script src="../../node_modules/html5-qrcode/html5-qrcode.min.js"></script>
 	</head>
 	<body class="bg-dark-1 text-light">
 		<!-- Sidebar -->
@@ -59,7 +117,7 @@
 				</a>
 				<a href="#" class="sidebar-link">
 					<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 icon">
-						<path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z" />
+						<path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076-.124a6.57 6.57 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z" />
 						<path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
 					</svg>
 					Settings
@@ -92,7 +150,9 @@
 					</button>
 					<a href="#" class="text-light">
 						<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-							<path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z" />
+							<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+								<path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z" />
+							</svg>
 						</svg>
 					</a>
 				</div>
@@ -118,10 +178,10 @@
 					
 					<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 						<div class="lg:col-span-2 bg-dark-2 rounded-lg p-6">
-							<div class="aspect-video bg-dark-1 rounded-lg relative overflow-hidden mb-6">
+							<div id="reader" class="aspect-video bg-dark-1 rounded-lg relative overflow-hidden mb-6">
 								<video id="qr-preview" class="hidden absolute inset-0 w-full h-full object-cover" autoplay muted playsinline></video>
 								<div class="absolute inset-0 flex items-center justify-center">
-									<div class="w-64 h-64 relative">
+									<div class="w-80 h-80 relative">
 										<div class="scanner-corner absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-teal-light"></div>
 										<div class="scanner-corner absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-teal-light"></div>
 										<div class="scanner-corner absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-teal-light"></div>
@@ -131,13 +191,13 @@
 							</div>
 							
 							<div class="flex space-x-3">
-								<button id="startScanner" class="flex items-center justify-center px-4 py-2 rounded-md bg-teal-900 text-teal-light hover:bg-teal-800 transition-colors">
+								<button id="startScanner" class="flex items-center justify-center px-4 py-2 rounded-md bg-teal-900 text-teal-light hover:bg-teal-800 cursor-pointer transition-colors">
 									<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-2">
 										<path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" />
 									</svg>
 									Start Scanner
 								</button>
-								<button id="stopScanner" class="flex items-center justify-center px-4 py-2 rounded-md bg-dark-3 text-light hover:bg-dark-4 transition-colors" disabled>
+								<button id="stopScanner" class="flex items-center justify-center px-4 py-2 rounded-md bg-dark-3 text-light hover:bg-dark-4 cursor-pointer transition-colors" disabled>
 									<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-2">
 										<path stroke-linecap="round" stroke-linejoin="round" d="M5.25 7.5A2.25 2.25 0 017.5 5.25h9a2.25 2.25 0 012.25 2.25v9a2.25 2.25 0 01-2.25 2.25h-9a2.25 2.25 0 01-2.25-2.25v-9z" />
 									</svg>
@@ -148,7 +208,11 @@
 							<div class="mt-6">
 								<div class="text-lg font-medium mb-2">Last Scan Result</div>
 								<div id="scanResult" class="bg-dark-1 rounded-lg p-4 min-h-[80px] flex items-center justify-center">
+									<?php if (!empty($qrCodeValue)): ?>
+									<span class="text-light"><?php echo $qrCodeValue; ?></span>
+									<?php else: ?>
 									<span class="text-gray-500">No recent scans</span>
+									<?php endif; ?>
 								</div>
 							</div>
 						</div>
@@ -167,10 +231,10 @@
 							</div>
 							
 							<div class="flex space-x-3">
-								<button id="signInBtn" class="flex-1 flex items-center justify-center px-4 py-2 rounded-md bg-teal-900 text-teal-light hover:bg-teal-800 transition-colors">
+								<button id="signInBtn" class="flex-1 flex items-center justify-center px-4 py-2 rounded-md bg-teal-900 text-teal-light hover:bg-teal-800 cursor-pointer">
 									Sign In
 								</button>
-								<button id="signOutBtn" class="flex-1 flex items-center justify-center px-4 py-2 rounded-md bg-dark-3 text-light hover:bg-dark-4 transition-colors">
+								<button id="signOutBtn" class="flex-1 flex items-center justify-center px-4 py-2 rounded-md bg-dark-3 text-light hover:bg-dark-4 cursor-pointer">
 									Sign Out
 								</button>
 							</div>
@@ -196,6 +260,16 @@
 									<input type="text" id="bulkStudentId" class="w-full bg-dark-1 border border-dark-4 rounded-md px-3 py-2 text-light focus:outline-none focus:ring-1 focus:ring-teal-light" placeholder="Enter student ID">
 								</div>
 								<div class="mb-4">
+									<label for="bulkYear" class="block text-sm font-medium text-gray-400 mb-1">Year Level</label>
+									<select id="bulkYear" class="w-full bg-dark-1 border border-dark-4 rounded-md px-3 py-2 text-light focus:outline-none focus:ring-1 focus:ring-teal-light">
+										<option value="">Select Year Level</option>
+										<option value="1st Year">1st Year</option>
+										<option value="2nd Year">2nd Year</option>
+										<option value="3rd Year">3rd Year</option>
+										<option value="4th Year">4th Year</option>
+									</select>
+								</div>
+								<div class="mb-4">
 									<label class="block text-sm font-medium text-gray-400 mb-1">Status</label>
 									<div class="flex space-x-4">
 										<label class="inline-flex items-center">
@@ -212,11 +286,13 @@
 										</label>
 									</div>
 								</div>
-								<button id="bulkSubmitBtn" class="w-full px-4 py-2 rounded-md bg-teal-900 text-teal-light hover:bg-teal-800 transition-colors">
+								<button id="bulkSubmitBtn" class="w-full px-4 py-2 rounded-md bg-teal-900 text-teal-light hover:bg-teal-800">
 									Submit Entry
 								</button>
 							</div>
-							
+							<button id="addYearBtn" class="w-full px-4 py-2 rounded-md bg-teal-900 text-teal-light hover:bg-teal-800 cursor-pointer">
+								Add by Year
+							</button>
 							<div>
 								<h3 class="text-lg font-medium mb-4">Import Data</h3>
 								<div class="mb-4">
@@ -231,7 +307,7 @@
 										</label>
 									</div>
 								</div>
-								<button id="importBtn" class="w-full px-4 py-2 rounded-md bg-dark-3 text-light hover:bg-dark-4 transition-colors" disabled>
+								<button id="importBtn" class="w-full px-4 py-2 rounded-md bg-dark-3 text-light hover:bg-dark-4" disabled>
 									Import Records
 								</button>
 							</div>
@@ -243,10 +319,10 @@
 								<div id="pendingEntries" class="text-gray-500">No pending entries</div>
 							</div>
 							<div class="flex space-x-3">
-								<button id="clearBtn" class="flex-1 px-4 py-2 rounded-md bg-dark-3 text-light hover:bg-dark-4 transition-colors" disabled>
+								<button id="clearBtn" class="flex-1 px-4 py-2 rounded-md bg-dark-3 text-light hover:bg-dark-4" disabled>
 									Clear All
 								</button>
-								<button id="submitAllBtn" class="flex-1 px-4 py-2 rounded-md bg-teal-900 text-teal-light hover:bg-teal-800 transition-colors" disabled>
+								<button id="submitAllBtn" class="flex-1 px-4 py-2 rounded-md bg-teal-900 text-teal-light hover:bg-teal-800" disabled>
 									Submit All
 								</button>
 							</div>
@@ -261,70 +337,43 @@
 						</svg>
 						<h3 class="text-lg font-medium">Recent Activity</h3>
 					</div>
-					
 					<div class="bg-dark-2 rounded-lg overflow-hidden">
 						<div class="grid grid-cols-5 gap-4 p-4 border-b border-dark-3 text-gray-400 text-sm font-medium">
 							<div>Student ID</div>
 							<div>Name</div>
-							<div>Year Level</div>
+							<div>Year</div>
 							<div>Status</div>
 							<div>Time</div>
 						</div>
-						
-						<div class="divide-y divide-dark-3">
-							<div class="grid grid-cols-5 gap-4 p-4">
-								<div>2021-00123</div>
-								<div>John Smith</div>
-								<div>1st Year</div>
-								<div><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-900 text-green-300">Sign In</span></div>
-								<div>9:15 AM</div>
-							</div>
-							
-							<div class="grid grid-cols-5 gap-4 p-4">
-								<div>2020-10056</div>
-								<div>Maria Garcia</div>
-								<div>2nd Year</div>
-								<div><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-900 text-red-300">Sign Out</span></div>
-								<div>9:12 AM</div>
-							</div>
-							
-							<div class="grid grid-cols-5 gap-4 p-4">
-								<div>2019-05781</div>
-								<div>Robert Johnson</div>
-								<div>3rd Year</div>
-								<div><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-900 text-green-300">Sign In</span></div>
-								<div>9:05 AM</div>
-							</div>
-							
-							<div class="grid grid-cols-5 gap-4 p-4">
-								<div>2018-02497</div>
-								<div>Emily Wilson</div>
-								<div>4th Year</div>
-								<div><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-900 text-red-300">Sign Out</span></div>
-								<div>9:01 AM</div>
-							</div>
-							
-							<div class="grid grid-cols-5 gap-4 p-4">
-								<div>2020-08712</div>
-								<div>Michael Brown</div>
-								<div>2nd Year</div>
-								<div><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-900 text-green-300">Sign In</span></div>
-								<div>8:55 AM</div>
-							</div>
-							
-							<div class="grid grid-cols-5 gap-4 p-4">
-								<div>2021-01458</div>
-								<div>Sophia Martinez</div>
-								<div>1st Year</div>
-								<div><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-900 text-green-300">Sign In</span></div>
-								<div>8:50 AM</div>
-							</div>
+						<div>
+							<?php foreach ($recentEntries as $e): ?>
+								<?php $timeIn = date('g:i A', strtotime($e['Sign_In_Time'])); ?>
+								<div class="grid grid-cols-5 gap-4 p-4">
+									<div><?= htmlspecialchars($e['Student_ID']) ?></div>
+									<div><?= htmlspecialchars($e['Name']) ?></div>
+									<div><?= htmlspecialchars($e['Year']) ?></div>
+									<div><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-900 text-green-300">Sign In</span></div>
+									<div><?= $timeIn ?></div>
+								</div>
+								<?php if (!empty($e['Sign_Out_Time'])): ?>
+									<?php $timeOut = date('g:i A', strtotime($e['Sign_Out_Time'])); ?>
+									<div class="grid grid-cols-5 gap-4 p-4">
+										<div><?= htmlspecialchars($e['Student_ID']) ?></div>
+										<div><?= htmlspecialchars($e['Name']) ?></div>
+										<div><?= htmlspecialchars($e['Year']) ?></div>
+										<div><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-900 text-red-300">Sign Out</span></div>
+										<div><?= $timeOut ?></div>
+									</div>
+								<?php endif; ?>
+							<?php endforeach; ?>
 						</div>
 					</div>
 				</div>
 			</div>
 		</div>
-
-		<script src="../js/common.js"></script>
+		<!-- Load common utilities, then scanner logic -->
+		<script src="../js/common.js" defer></script>
+		<script src="../js/scanner.js" defer></script>
+		<script src="https://cdn.jsdelivr.net/npm/flowbite@3.1.2/dist/flowbite.min.js"></script>
 	</body>
 </html>

@@ -35,17 +35,21 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function showConfirmAlert(title, text = '', confirmButtonText = 'Yes', cancelButtonText = 'No') {
+        // Determine theme preference
+        const isDark = localStorage.getItem('color-theme') === 'dark' ||
+                        (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
+
         return Swal.fire({
             icon: 'question',
-            title: title,
-            text: text,
+            title,
+            text,
             showCancelButton: true,
-            confirmButtonColor: '#14b8a6', // teal-light color
-            cancelButtonColor: '#475569', // gray-600 color
-            confirmButtonText: confirmButtonText,
-            cancelButtonText: cancelButtonText,
-            background: 'var(--color-dark-2)', // dark-2 color
-            color: '#f8fafc' // light color
+            confirmButtonColor: '#14b8a6',
+            cancelButtonColor: '#475569',
+            confirmButtonText,
+            cancelButtonText,
+            background: isDark ? 'var(--color-dark-2)' : '#ffffff',
+            color: isDark ? '#f8fafc' : '#000000'
         });
     }
     // DOM elements
