@@ -126,7 +126,7 @@ $recentEntries = $stmt->fetchAll(PDO::FETCH_ASSOC);
 			<div class="user-info">
 				<div class="user-avatar">JD</div>
 				<div class="user-details">
-					<div class="user-name">John Doe</div>
+					<div class="user-name">Mark Jordan Ugtong</div>
 					<div class="user-role">System Administrator</div>
 				</div>
 			</div>
@@ -216,7 +216,7 @@ $recentEntries = $stmt->fetchAll(PDO::FETCH_ASSOC);
 								</div>
 							</div>
 						</div>
-						
+
 						<div class="bg-dark-2 rounded-lg p-6">
 							<div class="flex items-center mb-4">
 								<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-2 text-teal-light">

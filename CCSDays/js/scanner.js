@@ -304,6 +304,77 @@ startScannerBtn.addEventListener('click', function() {
             signInBtn.click();
         }
     });
+
+    // Manual Sign In Button Click Handler Start
+signInBtn.addEventListener('click', function() {
+    const studentId = studentIdInput.value.trim();
+    if (!studentId) {
+        studentIdInput.classList.add('border-red-500');
+        showNotification('Please enter a student ID', 'error');
+        setTimeout(() => studentIdInput.classList.remove('border-red-500'), 2000);
+        return;
+    }
+    // Manual Sign In API call Start
+    fetch('../includes/api/attendance_handler.php', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: 'qr_code=' + encodeURIComponent(studentId)
+    })
+    .then(res => {
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+        return res.json();
+    })
+    .then(data => {
+        if (data.success) {
+            showSuccessModal(data.message);
+            addToRecentActivity(studentId, 'Sign In');
+        } else {
+            showNotification(data.message, 'error');
+        }
+    })
+    .catch(err => showNotification('Error: ' + err.message, 'error'));
+    // Manual Sign In API call End
+
+    studentIdInput.value = '';
+    studentIdInput.focus();
+});
+// Manual Sign In Button Click Handler End
+
+
+// Manual Sign Out Button Click Handler Start
+signOutBtn.addEventListener('click', function() {
+    const studentId = studentIdInput.value.trim();
+    if (!studentId) {
+        studentIdInput.classList.add('border-red-500');
+        showNotification('Please enter a student ID', 'error');
+        setTimeout(() => studentIdInput.classList.remove('border-red-500'), 2000);
+        return;
+    }
+    // Manual Sign Out API call Start
+    fetch('../includes/api/attendance_handler.php', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: 'qr_code=' + encodeURIComponent(studentId)
+    })
+    .then(res => {
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+        return res.json();
+    })
+    .then(data => {
+        if (data.success) {
+            showSuccessModal(data.message);
+            addToRecentActivity(studentId, 'Sign Out');
+        } else {
+            showNotification(data.message, 'error');
+        }
+    })
+    .catch(err => showNotification('Error: ' + err.message, 'error'));
+    // Manual Sign Out API call End
+
+    studentIdInput.value = '';
+    studentIdInput.focus();
+});
+// Manual Sign Out Button Click Handler End
     
     // Notification function (smaller, less intrusive than modal)
     function showNotification(message, type = 'success') {
