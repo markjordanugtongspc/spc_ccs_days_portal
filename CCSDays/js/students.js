@@ -40,6 +40,16 @@ function initializeStudentsPage() {
     
     // Function to display students
     function displayStudents(students, replace = true) {
+        // Normalize student fields for both API-fetched and PHP-filtered data
+        students = students.map(student => ({
+            ...student,
+            Student_ID: student.Student_ID || student.id,
+            Name: student.Name || student.name,
+            Year: student.Year || student.year,
+            College: student.College || student.course,
+            Attendance: student.Attendance !== undefined ? student.Attendance : student.attendance
+        }));
+        
         const container = document.getElementById('studentContainer');
         const showMoreContainer = document.getElementById('showMoreContainer');
         
@@ -101,11 +111,11 @@ function initializeStudentsPage() {
                         </svg>
                         Details
                     </button>
-                    <button class="text-teal-light hover:text-teal transition-colors flex items-center" onclick="markStudentAttendance('${student.Student_ID}')">
+                    <button class="text-teal-light hover:text-teal transition-colors flex items-center" onclick="generateStudentQR('${student.Student_ID}')">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-1">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                        Attendance
+                        Generate QR
                     </button>
                 </div>
             `;
@@ -295,8 +305,8 @@ async function updateStudent() {
                 modalContent.classList.remove('hidden');
                 modalContent.innerHTML = `
                     <div class="text-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-green-500 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-green-500 mb-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                         <h3 class="text-xl font-medium text-light mb-2">Student Updated</h3>
                         <p class="text-gray-400 mb-4">The student information has been updated successfully.</p>
@@ -360,8 +370,8 @@ async function deleteStudent() {
                 modalContent.classList.remove('hidden');
                 modalContent.innerHTML = `
                     <div class="text-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-green-500 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-green-500 mb-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                         <h3 class="text-xl font-medium text-light mb-2">Student Deleted</h3>
                         <p class="text-gray-400 mb-4">The student has been deleted successfully.</p>
@@ -647,11 +657,56 @@ function viewStudentDetails(studentId) {
 }
 
 // Function to mark attendance (remains the same)
-function markStudentAttendance(studentId) {
+function generateStudentQR(studentId) {
     // Implementation remains unchanged
+}
+
+// QR Code Generator Function
+async function generateStudentQR(studentId) {
+    const modal = document.getElementById('studentModal');
+    const modalContent = document.getElementById('modalContent');
+    try {
+        const res = await fetch(`../includes/api/qr_generator.php?student_id=${encodeURIComponent(studentId)}&size=300x300`);
+        const data = await res.json();
+        if (!data.success) throw new Error(data.message || 'QR generation failed.');
+        const qrUrl = data.qr_url;
+        modalContent.innerHTML = `
+            <div class="flex justify-center mb-4">
+                <h3 class="text-xl font-medium text-light">GENERATE UNIQUE QR CODE</h3>
+            </div>
+            <div class="flex justify-between mb-4">
+                <button id="qrOptionsBtn" class="bg-orange-100 text-orange-900 px-8 py-2 rounded-md hover:bg-orange-200 transition-colors" style="width: 100%">Options</button>
+                <div class="relative inline-block">
+                    <div id="qrOptionsDropdown" class="hidden absolute right-0 mt-2 w-48 bg-orange-100 rounded-md shadow-lg z-50">
+                        <a href="${qrUrl}" download="qr_${studentId}.png" class="block px-4 py-2 text-orange-900 hover:bg-orange-200 transition-colors">Download</a>
+                        <button id="copyQrBtn" class="w-full text-left px-4 py-2 text-orange-900 hover:bg-orange-200 transition-colors">Copy to Clipboard</button>
+                    </div>
+                </div>
+            </div>
+            <div class="flex justify-center mb-6">
+                <img src="${qrUrl}" alt="QR Code" class="h-100 w-100" />
+            </div>
+            <div class="flex justify-between">
+                <button id="cancelQrBtn" class="py-2 px-4 bg-red-500 text-light rounded-md hover:bg-red-600 transition-colors">Cancel</button>
+                <button id="saveQrBtn" class="py-2 px-4 bg-teal-300 text-teal-900 rounded-md hover:bg-teal-400 transition-colors">Save</button>
+            </div>
+        `;
+        modal.classList.remove('hidden');
+        document.getElementById('qrOptionsBtn').addEventListener('click', () => {
+            document.getElementById('qrOptionsDropdown').classList.toggle('hidden');
+        });
+        document.getElementById('copyQrBtn').addEventListener('click', () => {
+            navigator.clipboard.writeText(qrUrl).then(() => alert('QR URL copied to clipboard.')).catch(err => console.error(err));
+        });
+        document.getElementById('cancelQrBtn').addEventListener('click', () => modal.classList.add('hidden'));
+        document.getElementById('saveQrBtn').addEventListener('click', () => modal.classList.add('hidden'));
+    } catch (error) {
+        console.error('Error generating QR:', error);
+        alert(error.message);
+    }
 }
 
 // Make these functions globally available
 window.initializeStudentsPage = initializeStudentsPage; 
 window.viewStudentDetails = viewStudentDetails;
-window.markStudentAttendance = markStudentAttendance;
+window.generateStudentQR = generateStudentQR;

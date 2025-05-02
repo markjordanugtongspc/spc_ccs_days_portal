@@ -383,7 +383,7 @@ if ($isPartial) {
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-red-500 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                         </svg>
-                        <h3 class="text-xl font-medium text-light mb-2">Delete Student</h3>
+                        <h3 class="text-xl font-medium text-light">Delete Student</h3>
                         <p class="text-gray-400 mb-6">Are you sure you want to delete this student? This action cannot be undone.</p>
 
                         <div class="flex justify-center space-x-3">
@@ -492,7 +492,7 @@ if ($isPartial) {
                             <div class="col-span-full text-center p-8">
                                 <div class="inline-flex items-center justify-center">
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8 text-teal-light animate-spin">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
                                     </svg>
                                     <span class="ml-2 text-light">Loading students...</span>
                                 </div>
@@ -620,20 +620,20 @@ if ($isPartial) {
                         <p class="text-gray-300"><span class="text-gray-400">Attendance:</span> <span class="${attendanceClass}">${student.attendance} events</span></p>
                     </div>
                     <div class="mt-4 flex justify-between">
-                        <button class="px-3 py-2 rounded-md bg-dark-3 hover:bg-dark-4 text-teal-light hover:text-teal transition-all duration-200 flex items-center group" onclick="viewStudentDetails('${student.id}')">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-1.5 group-hover:scale-110 transition-transform duration-200">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            </svg>
-                            Details
-                        </button>
-                        <button class="px-3 py-2 rounded-md bg-dark-3 hover:bg-dark-4 text-teal-light hover:text-teal transition-all duration-200 flex items-center group" onclick="markStudentAttendance('${student.id}')">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-1.5 group-hover:scale-110 transition-transform duration-200">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            Attendance
-                        </button>
-                    </div>
+                    <button class="text-teal-light hover:text-teal transition-colors flex items-center" onclick="viewStudentDetails('${student.Student_ID}')">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-1">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        Details
+                    </button>
+                    <button class="text-teal-light hover:text-teal transition-colors flex items-center" onclick="generateStudentQR('${student.Student_ID}')">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-1">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Generate QR
+                    </button>
+                </div>
                 `;
                     container.appendChild(card);
                 });
@@ -702,110 +702,6 @@ if ($isPartial) {
 
                     modal.classList.remove('hidden');
                 }
-            }
-
-            // Mark attendance for a student
-            function markStudentAttendance(studentId) {
-                const student = mappedAllStudents.find(s => s.id === studentId);
-                if (student) {
-                    const modal = document.getElementById('studentModal');
-                    const modalContent = document.getElementById('modalContent');
-
-                    modalContent.innerHTML = `
-                    <div class="text-center mb-6">
-                        <div class="inline-flex items-center justify-center h-16 w-16 rounded-full bg-teal-900/20 mb-4">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8 text-teal-light">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                        </div>
-                        <h3 class="text-xl font-medium text-light">Mark Attendance</h3>
-                        <p class="text-gray-400">${student.name} (${student.id})</p>
-                    </div>
-                    
-                    <div class="mb-4">
-                        <label class="block text-sm text-gray-400 mb-1">Event</label>
-                        <select class="w-full bg-dark-1 border border-dark-4 rounded-md px-3 py-2 text-light focus:outline-none focus:ring-1 focus:ring-teal-light">
-                            <option>Programming Competition</option>
-                            <option>Web Development Workshop</option>
-                            <option>Industry Talk: AI Trends</option>
-                            <option>Mobile App Development Seminar</option>
-                        </select>
-                    </div>
-                    
-                    <div class="mb-4">
-                        <label class="block text-sm text-gray-400 mb-1">Date</label>
-                        <input type="date" class="w-full bg-dark-1 border border-dark-4 rounded-md px-3 py-2 text-light focus:outline-none focus:ring-1 focus:ring-teal-light">
-                    </div>
-                    
-                    <div class="mb-6">
-                        <label class="block text-sm text-gray-400 mb-1">Status</label>
-                        <div class="flex space-x-4">
-                            <label class="inline-flex items-center">
-                                <input type="radio" name="attendance-status" class="h-4 w-4 text-teal-light focus:ring-teal-light" checked>
-                                <span class="ml-2 text-light">Present</span>
-                            </label>
-                            <label class="inline-flex items-center">
-                                <input type="radio" name="attendance-status" class="h-4 w-4 text-teal-light focus:ring-teal-light">
-                                <span class="ml-2 text-light">Absent</span>
-                            </label>
-                            <label class="inline-flex items-center">
-                                <input type="radio" name="attendance-status" class="h-4 w-4 text-teal-light focus:ring-teal-light">
-                                <span class="ml-2 text-light">Late</span>
-                            </label>
-                        </div>
-                    </div>
-                    
-                    <div class="flex space-x-3">
-                        <button class="flex-1 py-2 px-4 bg-dark-3 text-light rounded-md hover:bg-dark-4 transition-colors close-modal">
-                            Cancel
-                        </button>
-                        <button class="flex-1 py-2 px-4 bg-teal-900 text-teal-light rounded-md hover:bg-teal-800 transition-colors" onclick="saveStudentAttendance('${studentId}')">
-                            Save
-                        </button>
-                    </div>
-                `;
-
-                    modal.classList.remove('hidden');
-                }
-            }
-
-            // Save attendance (demo function)
-            function saveStudentAttendance(studentId) {
-                const modal = document.getElementById('studentModal');
-                const modalContent = document.getElementById('modalContent');
-
-                // Show success message
-                modalContent.innerHTML = `
-                <div class="text-center mb-6">
-                    <div class="inline-flex items-center justify-center h-16 w-16 rounded-full bg-green-900/20 mb-4">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8 text-green-500">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                    </div>
-                    <h3 class="text-xl font-medium text-light">Attendance Recorded</h3>
-                    <p class="text-gray-400">The attendance has been successfully recorded.</p>
-                </div>
-                
-                <button class="w-full py-2 px-4 bg-teal-900 text-teal-light rounded-md hover:bg-teal-800 transition-colors close-modal">
-                    Close
-                </button>
-            `;
-
-                // Add listener to new close button
-                setTimeout(() => {
-                    document.querySelectorAll('.close-modal').forEach(button => {
-                        button.addEventListener('click', () => {
-                            modal.classList.add('hidden');
-                        });
-                    });
-                }, 0);
-
-                // Auto-close after 3 seconds
-                setTimeout(() => {
-                    if (!modal.classList.contains('hidden')) {
-                        modal.classList.add('hidden');
-                    }
-                }, 3000);
             }
 
             // Function to show Add Student modal
@@ -1058,12 +954,12 @@ if ($isPartial) {
                             </div>
                         </div>
                         
-                        <div class="flex space-x-3">
-                            <button type="button" class="flex-1 py-2 px-4 bg-dark-3 text-light rounded-md hover:bg-dark-4 transition-colors close-modal font-bold">
-                                CANCEL
+                        <div class="flex justify-end space-x-3 mt-6">
+                            <button type="button" id="cancelEditBtn" class="px-4 py-2 bg-dark-3 text-light rounded-md hover:bg-dark-4 transition-colors">
+                                Cancel
                             </button>
-                            <button type="button" id="updateStudentBtn" class="flex-1 py-2 px-4 bg-teal-900 text-teal-light rounded-md hover:bg-teal-800 transition-colors font-bold">
-                                SUBMIT
+                            <button type="submit" class="px-4 py-2 bg-teal text-dark font-medium rounded-md hover:bg-teal-light transition-colors">
+                                Save Changes
                             </button>
                         </div>
                     </form>

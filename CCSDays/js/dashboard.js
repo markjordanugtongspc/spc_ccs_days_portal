@@ -659,11 +659,11 @@ document.addEventListener('DOMContentLoaded', function () {
                                             </svg>
                                             Details
                                         </button>
-                                        <button class="flex-1 px-3 py-2 rounded-md bg-dark-3 hover:bg-dark-4 text-teal-light hover:text-teal transition-all duration-200 flex items-center justify-center group mark-attendance" data-id="${student.Student_ID}">
+                                        <button class="flex-1 px-3 py-2 rounded-md bg-dark-3 hover:bg-dark-4 text-teal-light hover:text-teal transition-all duration-200 flex items-center justify-center group generate-qr" data-id="${student.Student_ID}">
                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-1.5 group-hover:scale-110 transition-transform">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                             </svg>
-                                            Attendance
+                                            Generate QR
                                         </button>
                                     </div>
                                 `;
@@ -699,11 +699,11 @@ document.addEventListener('DOMContentLoaded', function () {
                         });
                     });
                     
-                    // Mark attendance
-                    document.querySelectorAll('.mark-attendance').forEach(button => {
+                    // Generate QR
+                    document.querySelectorAll('.generate-qr').forEach(button => {
                         button.addEventListener('click', function() {
                             const studentId = this.getAttribute('data-id');
-                            markStudentAttendance(studentId);
+                            generateStudentQR(studentId);
                         });
                     });
                 }
@@ -780,85 +780,46 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
                 
                 // Mark attendance modal
-                function markStudentAttendance(studentId) {
-                    fetch(`../includes/api/fetch_student_details.php?id=${studentId}`)
-                        .then(response => response.json())
-                        .then(student => {
-                            if (!student) {
-                                console.error('Student not found');
-                                return;
-                            }
-                            
-                            const modal = document.getElementById('studentModal');
-                            const modalContent = document.getElementById('studentModalContent');
-                            
-                            modalContent.innerHTML = `
-                                <div class="text-center mb-4">
-                                    <h3 class="text-lg font-medium text-light">Mark Attendance</h3>
-                                    <p class="text-gray-400">${student.Name} (${student.Student_ID})</p>
+                async function generateStudentQR(studentId) {
+                    const modal = document.getElementById('studentModal');
+                    const modalContent = document.getElementById('studentModalContent');
+                    try {
+                        const res = await fetch(`../includes/api/qr_generator.php?student_id=${encodeURIComponent(studentId)}&size=64x64`);
+                        const data = await res.json();
+                        if (!data.success) throw new Error(data.message || 'QR generation failed.');
+                        const qrUrl = data.qr_url;
+                        modalContent.innerHTML = `
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-xl font-medium text-light">Generate QR Code</h3>
+                                <div class="relative inline-block">
+                                    <button id="qrOptionsBtn" class="px-2 py-1 text-light">⋮</button>
+                                    <div id="qrOptionsDropdown" class="hidden absolute right-0 mt-2 w-40 bg-dark-2 rounded-md shadow-lg z-50">
+                                        <a href="${qrUrl}" download="qr_${studentId}.png" class="block px-4 py-2 text-light hover:bg-dark-3">Download</a>
+                                        <button id="copyQrBtn" class="w-full text-left px-4 py-2 text-light hover:bg-dark-3">Copy to Clipboard</button>
+                                    </div>
                                 </div>
-                                
-                                <div class="mb-4">
-                                    <label class="block text-sm text-gray-400 mb-1">Event</label>
-                                    <select class="w-full bg-dark-1 border border-gray-700 rounded px-3 py-2 text-light focus:outline-none focus:ring-1 focus:ring-teal-light">
-                                        <option>Programming Competition</option>
-                                        <option>Web Development Workshop</option>
-                                        <option>Industry Talk: AI Trends</option>
-                                    </select>
-                                </div>
-                                
-                                <div class="flex space-x-3 mt-6">
-                                    <button class="flex-1 py-2 px-4 bg-dark-3 text-light rounded hover:bg-dark-4 transition-colors close-modal">
-                                        Cancel
-                                    </button>
-                                    <button class="flex-1 py-2 px-4 bg-teal text-dark rounded hover:bg-teal-light transition-colors save-attendance" data-id="${student.Student_ID}">
-                                        Save
-                                    </button>
-                                </div>
-                            `;
-                            
-                            modal.classList.remove('hidden');
-                            
-                            // Set up modal actions
-                            document.querySelectorAll('.close-modal').forEach(button => {
-                                button.addEventListener('click', function() {
-                                    modal.classList.add('hidden');
-                                });
-                            });
-                            
-                            document.querySelectorAll('.save-attendance').forEach(button => {
-                                button.addEventListener('click', function() {
-                                    // Show success message
-                                    modalContent.innerHTML = `
-                                        <div class="text-center">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-green-500 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                            </svg>
-                                            <h3 class="text-lg font-medium text-light mb-2">Attendance Recorded</h3>
-                                            <p class="text-gray-400 mb-4">The attendance has been saved successfully.</p>
-                                            <button class="w-full py-2 px-4 bg-teal text-dark rounded hover:bg-teal-light transition-colors close-modal">
-                                                Close
-                                            </button>
-                                        </div>
-                                    `;
-                                    
-                                    // Setup close button again
-                                    document.querySelectorAll('.close-modal').forEach(btn => {
-                                        btn.addEventListener('click', function() {
-                                            modal.classList.add('hidden');
-                                        });
-                                    });
-                                    
-                                    // Auto close after 2 seconds
-                                    setTimeout(() => {
-                                        modal.classList.add('hidden');
-                                    }, 2000);
-                                });
-                            });
-                        })
-                        .catch(error => {
-                            console.error('Error fetching student details:', error);
+                            </div>
+                            <div class="flex justify-center mb-6">
+                                <img src="${qrUrl}" alt="QR Code" class="h-16 w-16" />
+                            </div>
+                            <div class="flex space-x-3">
+                                <button id="cancelQrBtn" class="flex-1 py-2 px-4 bg-dark-3 text-light rounded-md hover:bg-dark-4 transition-colors">Cancel</button>
+                                <button id="saveQrBtn" class="flex-1 py-2 px-4 bg-teal-900 text-teal-light rounded-md hover:bg-teal-800 transition-colors">Close</button>
+                            </div>
+                        `;
+                        document.getElementById('qrOptionsBtn').addEventListener('click', () => {
+                            document.getElementById('qrOptionsDropdown').classList.toggle('hidden');
                         });
+                        document.getElementById('copyQrBtn').addEventListener('click', () => {
+                            navigator.clipboard.writeText(qrUrl).then(() => alert('QR URL copied to clipboard.')).catch(err => console.error(err));
+                        });
+                        document.getElementById('cancelQrBtn').addEventListener('click', () => modal.classList.add('hidden'));
+                        document.getElementById('saveQrBtn').addEventListener('click', () => modal.classList.add('hidden'));
+                        modal.classList.remove('hidden');
+                    } catch (error) {
+                        console.error('Error generating QR:', error);
+                        alert(error.message);
+                    }
                 }
                 
                 // Debounce function to limit how often a function can run
