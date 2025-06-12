@@ -203,6 +203,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 createEventModal.classList.add('hidden');
                 createEventForm.reset();
                 
+                // Update total events count if the function exists
+                if (typeof updateTotalEventsCount === 'function') {
+                    updateTotalEventsCount();
+                }
+                
                 // Show success message
                 showSuccessAlert('Success!', 'Event created successfully! Waiting for approval.')
                 .then(() => {
@@ -327,6 +332,11 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
+                    // Update total events count if the function exists
+                    if (typeof updateTotalEventsCount === 'function') {
+                        updateTotalEventsCount();
+                    }
+                    
                     // Show success message
                     showSuccessAlert('Success!', 'Event deleted successfully!')
                     .then(() => {

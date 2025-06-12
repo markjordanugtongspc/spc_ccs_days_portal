@@ -674,30 +674,25 @@ async function generateStudentQR(studentId) {
             <div class="flex justify-center mb-4">
                 <h3 class="text-xl font-medium text-light">GENERATE UNIQUE QR CODE</h3>
             </div>
-            <div class="flex justify-between mb-4">
-                <button id="qrOptionsBtn" class="bg-orange-100 text-orange-900 px-8 py-2 rounded-md hover:bg-orange-200 transition-colors" style="width: 100%">Options</button>
-                <div class="relative inline-block">
-                    <div id="qrOptionsDropdown" class="hidden absolute right-0 mt-2 w-48 bg-orange-100 rounded-md shadow-lg z-50">
-                        <a href="${qrUrl}" download="qr_${studentId}.png" class="block px-4 py-2 text-orange-900 hover:bg-orange-200 transition-colors">Download</a>
-                        <button id="copyQrBtn" class="w-full text-left px-4 py-2 text-orange-900 hover:bg-orange-200 transition-colors">Copy to Clipboard</button>
-                    </div>
-                </div>
+            <div class="mb-4">
+                <a href="${qrUrl}" target="_blank" class="flex justify-center items-center bg-teal-600 text-white px-6 py-2.5 rounded-md hover:bg-teal-700 transition-all duration-300 shadow-md">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                    </svg>
+                    Open in New Tab
+                </a>
             </div>
             <div class="flex justify-center mb-6">
-                <img src="${qrUrl}" alt="QR Code" class="h-100 w-100" />
+                <img src="${qrUrl}" alt="QR Code" class="h-100 w-100 shadow-lg rounded-md" />
             </div>
             <div class="flex justify-between">
-                <button id="cancelQrBtn" class="py-2 px-4 bg-red-500 text-light rounded-md hover:bg-red-600 transition-colors">Cancel</button>
-                <button id="saveQrBtn" class="py-2 px-4 bg-teal-300 text-teal-900 rounded-md hover:bg-teal-400 transition-colors">Save</button>
+                <button id="cancelQrBtn" class="py-2.5 px-6 bg-gray-700 text-white rounded-md hover:bg-gray-800 transition-all duration-300 shadow-md">Cancel</button>
+                <button id="saveQrBtn" class="py-2.5 px-6 bg-teal-500 text-white rounded-md hover:bg-teal-600 transition-all duration-300 shadow-md">Save</button>
             </div>
         `;
         modal.classList.remove('hidden');
-        document.getElementById('qrOptionsBtn').addEventListener('click', () => {
-            document.getElementById('qrOptionsDropdown').classList.toggle('hidden');
-        });
-        document.getElementById('copyQrBtn').addEventListener('click', () => {
-            navigator.clipboard.writeText(qrUrl).then(() => alert('QR URL copied to clipboard.')).catch(err => console.error(err));
-        });
+        
+        // Add event listeners for buttons
         document.getElementById('cancelQrBtn').addEventListener('click', () => modal.classList.add('hidden'));
         document.getElementById('saveQrBtn').addEventListener('click', () => modal.classList.add('hidden'));
     } catch (error) {

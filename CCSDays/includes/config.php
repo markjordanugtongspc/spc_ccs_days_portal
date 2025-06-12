@@ -7,7 +7,7 @@ $servername = "localhost";
 $username = "root";
 $password = ""; 
 $database = "ccs_events_db_2025";
-$port = 4306;
+$port = 3306;
 
 // Create connection
 $conn = new mysqli($servername, $username, $password, $database, $port);

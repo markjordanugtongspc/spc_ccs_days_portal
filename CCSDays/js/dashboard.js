@@ -6,6 +6,8 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     // Initialize quick action buttons (includes Approve Events handler)
     setupQuickActionButtons();
+    // Update total events count
+    updateTotalEventsCount();
     // Dynamic pending approvals count
     function refreshPendingApprovalsCount() {
         fetch('../includes/api/events_api.php?status=pending')
@@ -366,9 +368,24 @@ document.addEventListener('DOMContentLoaded', function () {
                 } else {
                     eventsContainer.innerHTML = `
                         <div class="text-center p-4 text-gray-400">
-                            No upcoming events found. <a href="events.php" class="text-teal-light hover:underline">Create an event</a>
+                            No upcoming events found. <a href="#" id="createEventLink" class="text-teal-light hover:underline">Create an event</a>
                         </div>
                     `;
+                    
+                    // Add event listener to the "Create an event" link
+                    document.getElementById('createEventLink').addEventListener('click', function(e) {
+                        e.preventDefault(); // Prevent default navigation
+                        
+                        // Find the create event modal
+                        const createEventModal = document.getElementById('createEventModal');
+                        if (createEventModal) {
+                            // Show the modal directly
+                            createEventModal.classList.remove('hidden');
+                        } else {
+                            // If we're not on the events page, navigate to it
+                            window.location.href = 'events.php';
+                        }
+                    });
                 }
             })
             .catch(error => {
@@ -791,28 +808,25 @@ document.addEventListener('DOMContentLoaded', function () {
                         modalContent.innerHTML = `
                             <div class="flex justify-between items-center mb-4">
                                 <h3 class="text-xl font-medium text-light">Generate QR Code</h3>
-                                <div class="relative inline-block">
-                                    <button id="qrOptionsBtn" class="px-2 py-1 text-light">⋮</button>
-                                    <div id="qrOptionsDropdown" class="hidden absolute right-0 mt-2 w-40 bg-dark-2 rounded-md shadow-lg z-50">
-                                        <a href="${qrUrl}" download="qr_${studentId}.png" class="block px-4 py-2 text-light hover:bg-dark-3">Download</a>
-                                        <button id="copyQrBtn" class="w-full text-left px-4 py-2 text-light hover:bg-dark-3">Copy to Clipboard</button>
-                                    </div>
-                                </div>
+                            </div>
+                            <div class="mb-4">
+                                <a href="${qrUrl}" target="_blank" class="flex justify-center items-center bg-teal-900 text-teal-light px-4 py-2 rounded-md hover:bg-teal-800 transition-all duration-300">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                                    </svg>
+                                    Open in New Tab
+                                </a>
                             </div>
                             <div class="flex justify-center mb-6">
-                                <img src="${qrUrl}" alt="QR Code" class="h-16 w-16" />
+                                <img src="${qrUrl}" alt="QR Code" class="h-16 w-16 shadow-md rounded" />
                             </div>
                             <div class="flex space-x-3">
-                                <button id="cancelQrBtn" class="flex-1 py-2 px-4 bg-dark-3 text-light rounded-md hover:bg-dark-4 transition-colors">Cancel</button>
-                                <button id="saveQrBtn" class="flex-1 py-2 px-4 bg-teal-900 text-teal-light rounded-md hover:bg-teal-800 transition-colors">Close</button>
+                                <button id="cancelQrBtn" class="flex-1 py-2 px-4 bg-dark-3 text-light rounded-md hover:bg-dark-4 transition-all duration-300">Cancel</button>
+                                <button id="saveQrBtn" class="flex-1 py-2 px-4 bg-teal-900 text-teal-light rounded-md hover:bg-teal-800 transition-all duration-300">Save</button>
                             </div>
                         `;
-                        document.getElementById('qrOptionsBtn').addEventListener('click', () => {
-                            document.getElementById('qrOptionsDropdown').classList.toggle('hidden');
-                        });
-                        document.getElementById('copyQrBtn').addEventListener('click', () => {
-                            navigator.clipboard.writeText(qrUrl).then(() => alert('QR URL copied to clipboard.')).catch(err => console.error(err));
-                        });
+                        
+                        // Add event listeners for buttons
                         document.getElementById('cancelQrBtn').addEventListener('click', () => modal.classList.add('hidden'));
                         document.getElementById('saveQrBtn').addEventListener('click', () => modal.classList.add('hidden'));
                         modal.classList.remove('hidden');
@@ -1028,3 +1042,51 @@ class CCSModal {
     `;
     document.head.appendChild(style);
 })();
+
+// Add this function to update the total events count in the dashboard
+function updateTotalEventsCount() {
+    const totalEventsCountElement = document.getElementById('totalEventsCount');
+    if (totalEventsCountElement) {
+        // Determine the correct API path based on current location
+        const apiPath = window.location.pathname.includes('/pages/') 
+            ? '../includes/api/events_api.php?action=count'
+            : 'includes/api/events_api.php?action=count';
+            
+        fetch(apiPath)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update the count
+                    totalEventsCountElement.textContent = data.count || '0';
+                    
+                    // Update the change indicator
+                    const changeElement = document.querySelector('.stat-change');
+                    if (changeElement && data.change !== undefined) {
+                        // Remove existing classes
+                        changeElement.classList.remove('positive', 'negative', 'neutral');
+                        
+                        if (data.change > 0) {
+                            changeElement.classList.add('positive');
+                            changeElement.textContent = `+${data.change} from last week`;
+                        } else if (data.change < 0) {
+                            changeElement.classList.add('negative');
+                            changeElement.textContent = `${data.change} from last week`;
+                        } else {
+                            changeElement.classList.add('neutral');
+                            changeElement.textContent = 'No change from last week';
+                        }
+                    }
+                } else {
+                    console.error('Error fetching event count:', data.error);
+                    totalEventsCountElement.textContent = '0';
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching event count:', error);
+                totalEventsCountElement.textContent = '0';
+            });
+    }
+}
+
+// Expose the function globally
+window.updateTotalEventsCount = updateTotalEventsCount;

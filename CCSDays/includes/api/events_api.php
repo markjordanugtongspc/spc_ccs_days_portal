@@ -78,6 +78,11 @@ switch ($method) {
             approveAllEvents($conn);
             break;
         }
+        // Count endpoint
+        if (isset($_GET['action']) && $_GET['action'] === 'count') {
+            handleCountRequest($conn);
+            break;
+        }
         // Get events (with optional filters)
         getEvents($conn);
         break;
@@ -342,5 +347,37 @@ function approveAllEvents($conn) {
     } else {
         http_response_code(500);
         echo json_encode(['success' => false, 'error' => 'Failed to approve events: ' . $conn->error]);
+    }
+}
+
+/**
+ * Handle count request
+ */
+function handleCountRequest($conn) {
+    try {
+        // Get total count
+        $countQuery = "SELECT COUNT(*) as total FROM events";
+        $countResult = $conn->query($countQuery);
+        $totalCount = $countResult->fetch_assoc()['total'];
+        
+        // Get count from last week for comparison
+        $lastWeekQuery = "SELECT COUNT(*) as last_week FROM events WHERE created_at < DATE_SUB(NOW(), INTERVAL 1 WEEK)";
+        $lastWeekResult = $conn->query($lastWeekQuery);
+        $lastWeekCount = $lastWeekResult->fetch_assoc()['last_week'];
+        
+        // Calculate change
+        $change = $totalCount - $lastWeekCount;
+        
+        // Send response
+        echo json_encode([
+            'success' => true,
+            'count' => $totalCount,
+            'change' => $change
+        ]);
+    } catch (Exception $e) {
+        echo json_encode([
+            'success' => false,
+            'error' => 'Database error: ' . $e->getMessage()
+        ]);
     }
 }
