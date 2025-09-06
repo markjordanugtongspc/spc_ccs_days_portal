@@ -11,6 +11,11 @@ if (isset($_GET['refresh']) && $_GET['refresh'] === 'true') {
         
         // Store the QR code value in session to persist after refresh
         $_SESSION['last_scanned_qr'] = $qrCodeValue;
+        // Persist status (in/out) so server can render the latest student card
+        if (isset($_GET['status'])) {
+            $statusParam = $_GET['status'] === 'out' ? 'out' : 'in';
+            $_SESSION['last_status'] = $statusParam;
+        }
         
         // You can add your processing logic here
         // For example: update database, log attendance, etc.
@@ -52,6 +57,21 @@ $sql = "
 $stmt = $pdo->prepare($sql);
 $stmt->execute();
 $recentEntries = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Fetch latest student details for right panel if available in session
+$latestStudent = null;
+$latestStatusLabel = null;
+try {
+    if (!empty($_SESSION['last_scanned_qr'])) {
+        $lastId = $_SESSION['last_scanned_qr'];
+        $stmtStudent = $pdo->prepare("SELECT * FROM students WHERE Student_ID = ? LIMIT 1");
+        $stmtStudent->execute([$lastId]);
+        $latestStudent = $stmtStudent->fetch(PDO::FETCH_ASSOC) ?: null;
+        $latestStatusLabel = (isset($_SESSION['last_status']) && $_SESSION['last_status'] === 'out') ? 'Sign Out' : 'Sign In';
+    }
+} catch (Throwable $e) {
+    // fail silently; right panel simply won't render
+}
 ?>
 
 <!DOCTYPE html>
@@ -238,6 +258,55 @@ $recentEntries = $stmt->fetchAll(PDO::FETCH_ASSOC);
 									Sign Out
 								</button>
 							</div>
+							<div style="margin-bottom: 60px;"></div>
+							<?php if (!empty($latestStudent)): ?>
+							<div class="mb-6">
+								<div class="flex items-start justify-between">
+									<div class="flex items-start">
+										<?php
+											$name = isset($latestStudent['Name']) ? $latestStudent['Name'] : '';
+											$parts = preg_split('/\s+/', trim($name));
+											$initials = '';
+											if (!empty($parts)) {
+												$initials .= mb_substr($parts[0], 0, 1);
+												if (count($parts) > 1) {
+													$initials .= mb_substr($parts[count($parts)-1], 0, 1);
+												}
+											}
+										?>
+										<div class="h-12 w-12 rounded-full bg-teal-900/30 flex items-center justify-center text-teal-light font-semibold"><?php echo htmlspecialchars($initials ?: ''); ?></div>
+										<div class="ml-4">
+											<div class="text-lg font-medium text-light"><?php echo htmlspecialchars($name ?: 'Unknown'); ?></div>
+											<div class="text-gray-400 text-sm"><?php echo htmlspecialchars($latestStudent['Student_ID'] ?? ''); ?></div>
+										</div>
+									</div>
+									<?php $isOut = ($latestStatusLabel === 'Sign Out'); ?>
+									<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <?php echo $isOut ? 'bg-red-900 text-red-300' : 'bg-green-900 text-green-300'; ?>"><?php echo $latestStatusLabel; ?></span>
+								</div>
+								<div class="grid grid-cols-2 gap-4 text-sm mt-4">
+									<div>
+										<div class="text-gray-400">Course</div>
+										<div class="text-light"><?php echo htmlspecialchars($latestStudent['College'] ?? 'CCS'); ?></div>
+									</div>
+									<div>
+										<div class="text-gray-400">Year</div>
+										<div class="text-light"><?php echo isset($latestStudent['Year']) ? htmlspecialchars($latestStudent['Year']) . ' Year' : 'N/A'; ?></div>
+									</div>
+									<div>
+										<div class="text-gray-400">Gender</div>
+										<div class="text-light"><?php 
+											$g = $latestStudent['Gender'] ?? '';
+											echo $g === 'M' ? 'Male' : ($g === 'F' ? 'Female' : 'N/A');
+										?></div>
+									</div>
+									<div>
+										<div class="text-gray-400">Time</div>
+										<div class="text-light"><?php echo date('g:i A'); ?></div>
+									</div>
+								</div>
+							</div>
+							<?php endif; ?>
+							<br>
 						</div>
 					</div>
 				</div>

@@ -6,6 +6,27 @@ document.addEventListener('DOMContentLoaded', function() {
     const scanResult = document.getElementById('scanResult');
     let html5QrCode;
     
+    // Scanner state persistence
+    const SCANNER_STATE_KEY = 'qrScannerActive';
+    
+    // Function to save scanner state to localStorage
+    function saveActiveScannerState(isActive) {
+        try {
+            localStorage.setItem(SCANNER_STATE_KEY, isActive ? 'active' : '');
+        } catch (e) {
+            console.warn('Could not save scanner state:', e);
+        }
+    }
+    
+    // Function to check if scanner should be auto-started
+    function shouldAutoStartScanner() {
+        try {
+            return localStorage.getItem(SCANNER_STATE_KEY) === 'active';
+        } catch (e) {
+            return false;
+        }
+    }
+    
     // Flag to track if we're currently processing a scan/submission
     let isProcessing = false;
     
@@ -118,6 +139,12 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             html5QrCode = new Html5Qrcode("reader");
             console.log("HTML5 QR Code scanner initialized successfully");
+            
+            // Auto-start scanner if previously active
+            if (shouldAutoStartScanner()) {
+                console.log("Auto-starting scanner based on saved preference");
+                startScannerBtn.click();
+            }
         } catch (error) {
             console.error("Error initializing QR scanner:", error);
         }
@@ -155,6 +182,9 @@ document.addEventListener('DOMContentLoaded', function() {
 startScannerBtn.addEventListener('click', function() {
     // Clear any previous results
     scanResult.innerHTML = '<span class="text-gray-500">Initializing camera...</span>';
+    
+    // Save scanner state as active
+    saveActiveScannerState(true);
     
     // Check if scanner is already initialized
     if (!html5QrCode) {
@@ -243,6 +273,11 @@ startScannerBtn.addEventListener('click', function() {
                  }
                 document.body.appendChild(toastElement);
 
+                // Play success sound if available
+                if (data.success && typeof window.playSuccessAudio === 'function') {
+                    try { window.playSuccessAudio(); } catch (_) {}
+                }
+
                 // Add event listener to close button
                 const closeButton = document.getElementById('close-toast');
                 if (closeButton) {
@@ -254,22 +289,21 @@ startScannerBtn.addEventListener('click', function() {
                     });
                 }
 
-                // Auto-close toast after sound plays, then reload for real-time updates
+                // Auto-close toast after short delay, then redirect with params for PHP to render latest student
                 setTimeout(() => {
                     const toastContainer = document.getElementById('qr-toast-container');
                     if (toastContainer) {
                         toastContainer.remove();
                     }
                     if (data.success) {
-                        // Delay reload to ensure sound plays completely (sound is ~1s)
-                        setTimeout(() => {
-                            try {
-                                const statusLabel = isSignOut ? 'Sign Out' : 'Sign In';
-                                sessionStorage.setItem('lastPersonId', decodedText);
-                                sessionStorage.setItem('lastPersonStatus', statusLabel);
-                            } catch (_) {}
-                            window.location.reload();
-                        }, 500);
+                        // Redirect to persist last scanned ID to PHP and render details on right panel
+                        try {
+                            const statusLabel = isSignOut ? 'Sign Out' : 'Sign In';
+                            sessionStorage.setItem('lastPersonId', decodedText);
+                            sessionStorage.setItem('lastPersonStatus', statusLabel);
+                        } catch (_) {}
+                        const statusParam = isSignOut ? 'out' : 'in';
+                        window.location.href = 'scanner.php?refresh=true&qr=' + encodeURIComponent(decodedText) + '&status=' + statusParam;
                         
                         // Reset processing flag after a delay to prevent rapid successive scans
                         setTimeout(() => {
@@ -377,6 +411,9 @@ startScannerBtn.addEventListener('click', function() {
             return;
         }
         
+        // Save scanner state as inactive
+        saveActiveScannerState(false);
+        
         html5QrCode.stop().then(() => {
             startScannerBtn.disabled = false;
             stopScannerBtn.disabled = true;
@@ -431,9 +468,15 @@ signInBtn.addEventListener('click', async function() {
     .then(async data => {
         if (data.success) {
             addToRecentActivity(studentId, 'Sign In');
+            if (typeof window.playSuccessAudio === 'function') {
+                try { window.playSuccessAudio(); } catch (_) {}
+            }
             
-            // Reload page after a delay to ensure sound plays
-            setTimeout(() => window.location.reload(), 1500);
+            // Redirect to render latest student via PHP
+            setTimeout(() => {
+                const statusParam = 'in';
+                window.location.href = 'scanner.php?refresh=true&qr=' + encodeURIComponent(studentId) + '&status=' + statusParam;
+            }, 1500);
             
             // Reset processing flag after cooldown period
             setTimeout(() => {
@@ -484,9 +527,15 @@ signOutBtn.addEventListener('click', async function() {
     .then(async data => {
         if (data.success) {
             addToRecentActivity(studentId, 'Sign Out');
+            if (typeof window.playSuccessAudio === 'function') {
+                try { window.playSuccessAudio(); } catch (_) {}
+            }
             
-            // Reload page after a delay to ensure sound plays
-            setTimeout(() => window.location.reload(), 1500);
+            // Redirect to render latest student via PHP
+            setTimeout(() => {
+                const statusParam = 'out';
+                window.location.href = 'scanner.php?refresh=true&qr=' + encodeURIComponent(studentId) + '&status=' + statusParam;
+            }, 1500);
             
             // Reset processing flag after cooldown period
             setTimeout(() => {
