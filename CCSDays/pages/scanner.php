@@ -75,6 +75,8 @@ $recentEntries = $stmt->fetchAll(PDO::FETCH_ASSOC);
 		<script src="../../node_modules/html5-qrcode/html5-qrcode.min.js"></script>
 	</head>
 	<body class="bg-dark-1 text-light">
+		<!-- Preload success audio for reliable playback -->
+		<audio id="success-audio" src="../assets/audio/success.mp3" preload="auto"></audio>
 		<!-- Sidebar -->
 		<div class="sidebar">
 			<div class="sidebar-logo">
@@ -242,6 +244,8 @@ $recentEntries = $stmt->fetchAll(PDO::FETCH_ASSOC);
 				
 				<!-- Manual Entry Content -->
 				<div class="manual-content hidden">
+					<!-- Latest Person (auto-populated after scan) -->
+					<div id="latestPersonCard" class="hidden bg-dark-2 rounded-lg p-6 mb-6"></div>
 					<div class="flex items-center mb-6">
 						<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 mr-2 text-teal-light">
 							<path stroke-linecap="round" stroke-linejoin="round" d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
@@ -373,5 +377,95 @@ $recentEntries = $stmt->fetchAll(PDO::FETCH_ASSOC);
 		<script src="../js/common.js" defer></script>
 		<script src="../js/scanner.js" defer></script>
 		<script src="https://cdn.jsdelivr.net/npm/flowbite@3.1.2/dist/flowbite.min.js"></script>
+		<script>
+		// Dedicated sound playback for this page
+		(function() {
+		    const successAudio = document.getElementById('success-audio');
+		    let audioUnlocked = false;
+
+		    function unlockAudio() {
+		        if (audioUnlocked) return;
+		        try {
+		            // Try to play very briefly to unlock audio on iOS/Safari
+		            const p = successAudio.play();
+		            if (p && typeof p.then === 'function') {
+		                p.then(() => {
+		                    successAudio.pause();
+		                    successAudio.currentTime = 0;
+		                    audioUnlocked = true;
+		                }).catch(() => {
+		                    // ignore; will try again on next interaction
+		                });
+		            }
+		        } catch (e) {}
+		    }
+
+		    // Expose a global to let other scripts trigger the success sound
+		    window.playSuccessAudio = function() {
+		        try {
+		            successAudio.currentTime = 0;
+		            const p = successAudio.play();
+		            if (p && typeof p.then === 'function') {
+		                p.catch(() => {});
+		            }
+		        } catch (e) {}
+		    };
+
+		    // Unlock on first user interaction
+		    document.addEventListener('click', unlockAudio, { once: true, passive: true });
+		    document.addEventListener('touchstart', unlockAudio, { once: true, passive: true });
+		})();
+
+		// Render latest person card in Manual Entry from sessionStorage
+		(function renderLatestFromSession() {
+		    const container = document.getElementById('latestPersonCard');
+		    if (!container) return;
+		    const id = sessionStorage.getItem('lastPersonId');
+		    const status = sessionStorage.getItem('lastPersonStatus');
+		    if (!id || !status) return;
+
+		    fetch(`../includes/api/fetch_student_details.php?id=${encodeURIComponent(id)}`)
+		        .then(r => r.json())
+		        .then(student => {
+		            if (!student || student.error) return;
+		            const statusClass = status === 'Sign Out' ? 'bg-red-900 text-red-300' : 'bg-green-900 text-green-300';
+		            const parts = (student.Name || '').split(' ');
+		            const initials = (parts[0]?.charAt(0) || '') + (parts.length > 1 ? parts[parts.length - 1].charAt(0) : '');
+		            const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+		            container.classList.remove('hidden');
+		            container.innerHTML = `
+		                <div class="flex items-start justify-between mb-4">
+		                    <div class="flex items-start">
+		                        <div class=\"h-12 w-12 rounded-full bg-teal-900/30 flex items-center justify-center text-teal-light font-semibold\">${initials}</div>
+		                        <div class=\"ml-4\">
+		                            <div class=\"text-lg font-medium text-light\">${student.Name || 'Unknown'}</div>
+		                            <div class=\"text-gray-400 text-sm\">${student.Student_ID || id}</div>
+		                        </div>
+		                    </div>
+		                    <span class=\"inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusClass}\">${status}</span>
+		                </div>
+		                <div class=\"grid grid-cols-2 gap-4 text-sm\">
+		                    <div>
+		                        <div class=\"text-gray-400\">Course</div>
+		                        <div class=\"text-light\">${student.College || 'CCS'}</div>
+		                    </div>
+		                    <div>
+		                        <div class=\"text-gray-400\">Year</div>
+		                        <div class=\"text-light\">${student.Year ? student.Year + ' Year' : 'N/A'}</div>
+		                    </div>
+		                    <div>
+		                        <div class=\"text-gray-400\">Gender</div>
+		                        <div class=\"text-light\">${student.Gender === 'M' ? 'Male' : student.Gender === 'F' ? 'Female' : 'N/A'}</div>
+		                    </div>
+		                    <div>
+		                        <div class=\"text-gray-400\">Time</div>
+		                        <div class=\"text-light\">${timeStr}</div>
+		                    </div>
+		                </div>
+		            `;
+		        })
+		        .catch(() => {});
+		})();
+		</script>
 	</body>
 </html>

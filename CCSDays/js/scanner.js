@@ -6,6 +6,80 @@ document.addEventListener('DOMContentLoaded', function() {
     const scanResult = document.getElementById('scanResult');
     let html5QrCode;
     
+    // Flag to track if we're currently processing a scan/submission
+    let isProcessing = false;
+    
+    // Render latest person card inside Manual Entry panel
+    async function showLatestPerson(studentId, statusLabel) {
+        try {
+            const resp = await fetch(`../includes/api/fetch_student_details.php?id=${encodeURIComponent(studentId)}`);
+            const student = await resp.json();
+            if (!student || student.error) return;
+            
+            const manualContent = document.querySelector('.manual-content');
+            if (!manualContent) return;
+            
+            let card = document.getElementById('latestPersonCard');
+            if (!card) {
+                card = document.createElement('div');
+                card.id = 'latestPersonCard';
+                card.className = 'bg-dark-2 rounded-lg p-6 mb-6';
+                manualContent.insertBefore(card, manualContent.firstChild);
+            }
+            const statusClass = statusLabel === 'Sign Out'
+                ? 'bg-red-900 text-red-300'
+                : 'bg-green-900 text-green-300';
+            const initials = (() => {
+                const parts = (student.Name || '').split(' ');
+                return (parts[0]?.[0] || '') + (parts.length > 1 ? parts[parts.length - 1][0] : '');
+            })();
+            const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            
+            card.innerHTML = `
+                <div class="flex items-start justify-between mb-4">
+                    <div class="flex items-start">
+                        <div class="h-12 w-12 rounded-full bg-teal-900/30 flex items-center justify-center text-teal-light font-semibold">${initials}</div>
+                        <div class="ml-4">
+                            <div class="text-lg font-medium text-light">${student.Name || 'Unknown'}</div>
+                            <div class="text-gray-400 text-sm">${student.Student_ID || studentId}</div>
+                        </div>
+                    </div>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusClass}">${statusLabel}</span>
+                </div>
+                <div class="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                        <div class="text-gray-400">Course</div>
+                        <div class="text-light">${student.College || 'CCS'}</div>
+                    </div>
+                    <div>
+                        <div class="text-gray-400">Year</div>
+                        <div class="text-light">${student.Year ? `${student.Year} Year` : 'N/A'}</div>
+                    </div>
+                    <div>
+                        <div class="text-gray-400">Gender</div>
+                        <div class="text-light">${student.Gender === 'M' ? 'Male' : student.Gender === 'F' ? 'Female' : 'N/A'}</div>
+                    </div>
+                    <div>
+                        <div class="text-gray-400">Time</div>
+                        <div class="text-light">${nowTime}</div>
+                    </div>
+                </div>
+            `;
+        } catch (_) {
+            // ignore rendering errors
+        }
+    }
+
+    // After reload, show the latest person if stored
+    (function renderLastFromSession() {
+        const lastId = sessionStorage.getItem('lastPersonId');
+        const lastStatus = sessionStorage.getItem('lastPersonStatus');
+        if (lastId && lastStatus) {
+            showLatestPerson(lastId, lastStatus);
+            // keep it for this session unless next update overrides
+        }
+    })();
+    
     // Tab switching functionality
     const tabItems = document.querySelectorAll('.tab-item');
     const scannerTab = document.querySelector('.scanner-content');
@@ -97,16 +171,17 @@ startScannerBtn.addEventListener('click', function() {
     html5QrCode.start(
         { facingMode: 'environment' },
         { fps: 64, qrbox: { width: 480, height: 480 } }, // box change here
-        (decodedText, decodedResult) => {
+        async (decodedText, decodedResult) => {
             console.log('Decoded:', decodedText);
             
-            // Play a success sound
-            const success = new Audio('../assets/audio/success.mp3');
-            try {
-                success.play().catch(e => console.log('Audio play error:', e));
-            } catch (e) {
-                console.log('Audio error:', e);
+            // Check if we're already processing a scan
+            if (isProcessing) {
+                console.log('Already processing a scan, ignoring this one');
+                return;
             }
+            
+            // Set processing flag
+            isProcessing = true;
             
             // Show the decoded text in the scan result area
             showScanMessage(decodedText);
@@ -126,7 +201,7 @@ startScannerBtn.addEventListener('click', function() {
                 }
                 return response.json(); // Parse the JSON response body
             })
-            .then(data => {
+            .then(async data => {
                 // Create and show a toast notification with the API response
                 const toastElement = document.createElement('div');
                 toastElement.id = 'qr-toast-container';
@@ -179,13 +254,33 @@ startScannerBtn.addEventListener('click', function() {
                     });
                 }
 
-                // Optional: Auto-close the toast after a few seconds
+                // Auto-close toast after sound plays, then reload for real-time updates
                 setTimeout(() => {
-                     const toastContainer = document.getElementById('qr-toast-container');
-                     if (toastContainer) {
-                         toastContainer.remove();
-                     }
-                }, 5000); // Auto-close after 5 seconds
+                    const toastContainer = document.getElementById('qr-toast-container');
+                    if (toastContainer) {
+                        toastContainer.remove();
+                    }
+                    if (data.success) {
+                        // Delay reload to ensure sound plays completely (sound is ~1s)
+                        setTimeout(() => {
+                            try {
+                                const statusLabel = isSignOut ? 'Sign Out' : 'Sign In';
+                                sessionStorage.setItem('lastPersonId', decodedText);
+                                sessionStorage.setItem('lastPersonStatus', statusLabel);
+                            } catch (_) {}
+                            window.location.reload();
+                        }, 500);
+                        
+                        // Reset processing flag after a delay to prevent rapid successive scans
+                        setTimeout(() => {
+                            console.log('Cooldown complete, ready for next scan');
+                            isProcessing = false;
+                        }, 10000); // 10 second cooldown
+                    } else {
+                        // If not successful, reset processing flag immediately
+                        isProcessing = false;
+                    }
+                }, 1500);
 
             })
             .catch(error => {
@@ -306,7 +401,7 @@ startScannerBtn.addEventListener('click', function() {
     });
 
     // Manual Sign In Button Click Handler Start
-signInBtn.addEventListener('click', function() {
+signInBtn.addEventListener('click', async function() {
     const studentId = studentIdInput.value.trim();
     if (!studentId) {
         studentIdInput.classList.add('border-red-500');
@@ -314,6 +409,15 @@ signInBtn.addEventListener('click', function() {
         setTimeout(() => studentIdInput.classList.remove('border-red-500'), 2000);
         return;
     }
+    
+    // Check if we're already processing a request
+    if (isProcessing) {
+        showNotification('Please wait before submitting again (cooldown period)', 'error');
+        return;
+    }
+    
+    // Set processing flag
+    isProcessing = true;
     // Manual Sign In API call Start
     fetch('../includes/api/attendance_handler.php', {
         method: 'POST',
@@ -324,12 +428,20 @@ signInBtn.addEventListener('click', function() {
         if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
         return res.json();
     })
-    .then(data => {
+    .then(async data => {
         if (data.success) {
-            showSuccessModal(data.message);
             addToRecentActivity(studentId, 'Sign In');
+            
+            // Reload page after a delay to ensure sound plays
+            setTimeout(() => window.location.reload(), 1500);
+            
+            // Reset processing flag after cooldown period
+            setTimeout(() => {
+                isProcessing = false;
+            }, 10000); // 10 second cooldown
         } else {
             showNotification(data.message, 'error');
+            isProcessing = false; // Reset immediately if error
         }
     })
     .catch(err => showNotification('Error: ' + err.message, 'error'));
@@ -342,7 +454,7 @@ signInBtn.addEventListener('click', function() {
 
 
 // Manual Sign Out Button Click Handler Start
-signOutBtn.addEventListener('click', function() {
+signOutBtn.addEventListener('click', async function() {
     const studentId = studentIdInput.value.trim();
     if (!studentId) {
         studentIdInput.classList.add('border-red-500');
@@ -350,6 +462,15 @@ signOutBtn.addEventListener('click', function() {
         setTimeout(() => studentIdInput.classList.remove('border-red-500'), 2000);
         return;
     }
+    
+    // Check if we're already processing a request
+    if (isProcessing) {
+        showNotification('Please wait before submitting again (cooldown period)', 'error');
+        return;
+    }
+    
+    // Set processing flag
+    isProcessing = true;
     // Manual Sign Out API call Start
     fetch('../includes/api/attendance_handler.php', {
         method: 'POST',
@@ -360,12 +481,20 @@ signOutBtn.addEventListener('click', function() {
         if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
         return res.json();
     })
-    .then(data => {
+    .then(async data => {
         if (data.success) {
-            showSuccessModal(data.message);
             addToRecentActivity(studentId, 'Sign Out');
+            
+            // Reload page after a delay to ensure sound plays
+            setTimeout(() => window.location.reload(), 1500);
+            
+            // Reset processing flag after cooldown period
+            setTimeout(() => {
+                isProcessing = false;
+            }, 10000); // 10 second cooldown
         } else {
             showNotification(data.message, 'error');
+            isProcessing = false; // Reset immediately if error
         }
     })
     .catch(err => showNotification('Error: ' + err.message, 'error'));
@@ -410,78 +539,6 @@ signOutBtn.addEventListener('click', function() {
             }, 300); // Wait for the slide out animation
         }, 3000);
     }
-    
-    // Success modal function for sign in/out operations
-    function showSuccessModal(message) {
-        const modal = document.createElement('div');
-        modal.className = 'modal-overlay';
-        modal.innerHTML = `
-            <div class="modal-container">
-                <div class="modal-icon modal-success">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                </div>
-                <div class="modal-title">Success</div>
-                <div class="modal-message">${message}</div>
-                <button class="modal-button close-modal">OK</button>
-            </div>
-        `;
-        
-        document.body.appendChild(modal);
-        modal.querySelector('.close-modal').addEventListener('click', function() {
-            document.body.removeChild(modal);
-        });
-        
-        // Auto-close after 3 seconds
-        setTimeout(() => {
-            if (document.body.contains(modal)) {
-                document.body.removeChild(modal);
-            }
-        }, 3000);
-    }
-    
-    signInBtn.addEventListener('click', function() {
-        const studentId = studentIdInput.value.trim();
-        if (studentId) {
-            // Handle sign in (will be connected to backend later)
-            showSuccessModal(`Student ${studentId} signed in successfully!`);
-            
-            // Add to recent activity (demo functionality)
-            addToRecentActivity(studentId, 'Sign In');
-            
-            studentIdInput.value = '';
-            studentIdInput.focus();
-        } else {
-            // Show error for empty input
-            studentIdInput.classList.add('border-red-500');
-            showNotification('Please enter a student ID', 'error');
-            setTimeout(() => {
-                studentIdInput.classList.remove('border-red-500');
-            }, 2000);
-        }
-    });
-    
-    signOutBtn.addEventListener('click', function() {
-        const studentId = studentIdInput.value.trim();
-        if (studentId) {
-            // Handle sign out (will be connected to backend later)
-            showSuccessModal(`Student ${studentId} signed out successfully!`);
-            
-            // Add to recent activity (demo functionality)
-            addToRecentActivity(studentId, 'Sign Out');
-            
-            studentIdInput.value = '';
-            studentIdInput.focus();
-        } else {
-            // Show error for empty input
-            studentIdInput.classList.add('border-red-500');
-            showNotification('Please enter a student ID', 'error');
-            setTimeout(() => {
-                studentIdInput.classList.remove('border-red-500');
-            }, 2000);
-        }
-    });
     
     // Function to add entry to the recent activity table (for demo)
     function addToRecentActivity(studentId, status) {

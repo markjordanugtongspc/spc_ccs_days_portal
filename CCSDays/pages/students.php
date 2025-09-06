@@ -284,6 +284,11 @@ if ($isPartial) {
                 <div class="grid grid-cols-4 gap-4" id="studentContainer">
                     <!-- Student cards will be generated here by JavaScript -->
                 </div>
+                <div id="showMoreContainer" class="flex justify-center mt-4" style="display: none;">
+                    <button id="showMoreBtn" class="px-4 py-2 bg-teal text-dark font-medium rounded-lg hover:bg-teal-light transition-colors">
+                        Show More
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -301,6 +306,7 @@ if ($isPartial) {
                 <div class="p-6" id="modalContent">
                     <!-- Modal content will be populated dynamically -->
                 </div>
+                <div class="p-6 hidden" id="qrContent"></div>
                 <!-- Edit form will be shown/hidden dynamically -->
                 <div class="p-6 hidden" id="editFormContent">
                     <h2 class="text-xl font-semibold text-light mb-4">Edit Student Information</h2>
@@ -620,14 +626,14 @@ if ($isPartial) {
                         <p class="text-gray-300"><span class="text-gray-400">Attendance:</span> <span class="${attendanceClass}">${student.attendance} events</span></p>
                     </div>
                     <div class="mt-4 flex justify-between">
-                    <button class="text-teal-light hover:text-teal transition-colors flex items-center" onclick="viewStudentDetails('${student.Student_ID}')">
+                    <button class="text-teal-light hover:text-teal transition-colors flex items-center" onclick="viewStudentDetails('${student.id}')">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-1">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
                             <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                         </svg>
                         Details
                     </button>
-                    <button class="text-teal-light hover:text-teal transition-colors flex items-center" onclick="generateStudentQR('${student.Student_ID}')">
+                    <button class="text-teal-light hover:text-teal transition-colors flex items-center" onclick="generateStudentQR('${student.id}')">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-1">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
@@ -701,6 +707,71 @@ if ($isPartial) {
                     `;
 
                     modal.classList.remove('hidden');
+                }
+            }
+
+            // Generate and display student QR (cached)
+            async function generateStudentQR(studentId) {
+                const modal = document.getElementById('studentModal');
+                const modalContent = document.getElementById('modalContent');
+                const qrContent = document.getElementById('qrContent');
+
+                modalContent.classList.remove('hidden');
+                qrContent.classList.add('hidden');
+
+                modalContent.innerHTML = `
+                    <div class="text-center p-8">
+                        <div class="inline-flex items-center justify-center h-16 w-16 rounded-full bg-teal-900/20 mb-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-8 h-8 text-teal-light animate-spin">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                            </svg>
+                        </div>
+                        <div class="text-light">Generating QR code...</div>
+                    </div>
+                `;
+
+                modal.classList.remove('hidden');
+
+                try {
+                    const params = new URLSearchParams({ student_id: studentId, size: '256x256', ecc: 'L', qzone: '4' });
+                    const resp = await fetch(`../includes/api/qr_generator.php?${params.toString()}`, { method: 'GET' });
+                    const data = await resp.json();
+                    if (!data.success) throw new Error(data.message || 'QR generate failed');
+
+                    const qrPath = `../${data.qr_path}`; // relative from pages/
+                    modalContent.innerHTML = `
+                        <div class="text-center">
+                            <h3 class="text-xl font-medium text-light mb-4">Student QR Code</h3>
+                            <div class="flex justify-center mb-4">
+                                <img src="${qrPath}" alt="QR Code" class="w-64 h-64 bg-white p-2 rounded" />
+                            </div>
+                            <div class="flex gap-3 justify-center">
+                                <a href="${qrPath}" download title="Download QR"
+                                   class="px-4 py-2 bg-teal-900 text-teal-light rounded-md hover:bg-teal-800 transition-colors">Download</a>
+                                <button class="px-4 py-2 bg-dark-3 text-light rounded-md hover:bg-dark-4 transition-colors close-modal">Close</button>
+                            </div>
+                        </div>
+                    `;
+
+                    // Wire close button
+                    document.querySelectorAll('.close-modal').forEach(btn => {
+                        btn.addEventListener('click', () => modal.classList.add('hidden'));
+                    });
+                } catch (e) {
+                    modalContent.innerHTML = `
+                        <div class="text-center p-8">
+                            <div class="inline-flex items-center justify-center h-16 w-16 rounded-full bg-red-900/20 mb-4">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8 text-red-500">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                            </div>
+                            <div class="text-light mb-4">Failed to generate QR. Please try again.</div>
+                            <button class="px-4 py-2 bg-dark-3 text-light rounded-md hover:bg-dark-4 transition-colors close-modal">Close</button>
+                        </div>
+                    `;
+                    document.querySelectorAll('.close-modal').forEach(btn => {
+                        btn.addEventListener('click', () => modal.classList.add('hidden'));
+                    });
                 }
             }
 

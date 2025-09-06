@@ -112,9 +112,20 @@ function initializeStudentsPage() {
                         Details
                     </button>
                     <button class="text-teal-light hover:text-teal transition-colors flex items-center" onclick="generateStudentQR('${student.Student_ID}')">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-1">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
+                        <svg
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <path
+    fill-rule="evenodd"
+    clip-rule="evenodd"
+    d="M9 3H3V9H5V5H9V3ZM3 21V15H5V19H9V21H3ZM15 3V5H19V9H21V3H15ZM19 15H21V21H15V19H19V15ZM7 7H11V11H7V7ZM7 13H11V17H7V13ZM17 7H13V11H17V7ZM13 13H17V17H13V13Z"
+    fill="currentColor"
+  />
+</svg>
                         Generate QR
                     </button>
                 </div>
@@ -661,40 +672,32 @@ function generateStudentQR(studentId) {
     // Implementation remains unchanged
 }
 
-// QR Code Generator Function
+// QR Code Generator Function (uses cached local path from backend)
 async function generateStudentQR(studentId) {
     const modal = document.getElementById('studentModal');
     const modalContent = document.getElementById('modalContent');
     try {
-        const res = await fetch(`../includes/api/qr_generator.php?student_id=${encodeURIComponent(studentId)}&size=300x300`);
+        const res = await fetch(`../includes/api/qr_generator.php?student_id=${encodeURIComponent(studentId)}&size=300x300&ecc=L&qzone=4`);
         const data = await res.json();
         if (!data.success) throw new Error(data.message || 'QR generation failed.');
-        const qrUrl = data.qr_url;
+        const qrPath = `../${data.qr_path}`;
         modalContent.innerHTML = `
-            <div class="flex justify-center mb-4">
-                <h3 class="text-xl font-medium text-light">GENERATE UNIQUE QR CODE</h3>
-            </div>
-            <div class="mb-4">
-                <a href="${qrUrl}" target="_blank" class="flex justify-center items-center bg-teal-600 text-white px-6 py-2.5 rounded-md hover:bg-teal-700 transition-all duration-300 shadow-md">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
-                    </svg>
-                    Open in New Tab
-                </a>
-            </div>
-            <div class="flex justify-center mb-6">
-                <img src="${qrUrl}" alt="QR Code" class="h-100 w-100 shadow-lg rounded-md" />
-            </div>
-            <div class="flex justify-between">
-                <button id="cancelQrBtn" class="py-2.5 px-6 bg-gray-700 text-white rounded-md hover:bg-gray-800 transition-all duration-300 shadow-md">Cancel</button>
-                <button id="saveQrBtn" class="py-2.5 px-6 bg-teal-500 text-white rounded-md hover:bg-teal-600 transition-all duration-300 shadow-md">Save</button>
+            <div class="text-center">
+                <h3 class="text-xl font-medium text-light mb-4">Student QR Code</h3>
+                <div class="flex justify-center mb-4">
+                    <img src="${qrPath}" alt="QR Code" class="w-64 h-64 bg-white p-2 rounded" />
+                </div>
+                <div class="flex gap-3 justify-center">
+                    <a href="${qrPath}" download title="Download QR"
+                       class="px-4 py-2 bg-teal-900 text-teal-light rounded-md hover:bg-teal-800 transition-colors">Download</a>
+                    <button class="px-4 py-2 bg-dark-3 text-light rounded-md hover:bg-dark-4 transition-colors close-modal">Close</button>
+                </div>
             </div>
         `;
         modal.classList.remove('hidden');
-        
-        // Add event listeners for buttons
-        document.getElementById('cancelQrBtn').addEventListener('click', () => modal.classList.add('hidden'));
-        document.getElementById('saveQrBtn').addEventListener('click', () => modal.classList.add('hidden'));
+        document.querySelectorAll('.close-modal').forEach(btn => {
+            btn.addEventListener('click', () => modal.classList.add('hidden'));
+        });
     } catch (error) {
         console.error('Error generating QR:', error);
         alert(error.message);
