@@ -54,9 +54,107 @@ try {
     error_log('QR log table create error: ' . $e->getMessage());
 }
 
-// Build QR URL
+// Assemble optional parameters per goQR API
+// Docs: https://goqr.me/api/doc/create-qr-code/
+$ecc = isset($_GET['ecc']) && preg_match('/^[LMQH]$/', strtoupper($_GET['ecc'])) ? strtoupper($_GET['ecc']) : 'L';
+$qzone = isset($_GET['qzone']) && is_numeric($_GET['qzone']) ? max(0, min(100, (int)$_GET['qzone'])) : 4; // sensible default
+$margin = isset($_GET['margin']) && is_numeric($_GET['margin']) ? max(0, min(50, (int)$_GET['margin'])) : 1;
+$format = 'png'; // force PNG for caching
+
+// Color sanitization (hex short/long or rgb-r-g-b). We will forward valid values only.
+function sanitizeColor($value) {
+    $value = trim($value);
+    if (preg_match('/^[0-9]{1,3}-[0-9]{1,3}-[0-9]{1,3}$/', $value)) {
+        [$r, $g, $b] = array_map('intval', explode('-', $value));
+        if ($r <= 255 && $g <= 255 && $b <= 255) return "$r-$g-$b";
+        return null;
+    }
+    if (preg_match('/^[a-fA-F0-9]{3}$/', $value) || preg_match('/^[a-fA-F0-9]{6}$/', $value)) {
+        return strtolower($value);
+    }
+    return null;
+}
+
+$color = isset($_GET['color']) ? sanitizeColor($_GET['color']) : null;
+$bgcolor = isset($_GET['bgcolor']) ? sanitizeColor($_GET['bgcolor']) : null;
+
+// Build QR data and remote API URL
 $qrData = $studentId;
-$apiUrl = 'https://api.qrserver.com/v1/create-qr-code/?data=' . urlencode($qrData) . '&size=' . $size;
+$query = [
+    'data' => $qrData,
+    'size' => $size,
+    'ecc' => $ecc,
+    'qzone' => $qzone,
+    'margin' => $margin,
+    'format' => $format,
+];
+if ($color) $query['color'] = $color;
+if ($bgcolor) $query['bgcolor'] = $bgcolor;
+
+$apiBase = 'https://api.qrserver.com/v1/create-qr-code/';
+$apiUrl = $apiBase . '?' . http_build_query($query);
+
+// Prepare local cache path
+$assetsDir = realpath(__DIR__ . '/../../assets');
+if ($assetsDir === false) {
+    $assetsDir = __DIR__ . '/../../assets';
+}
+$qrDir = $assetsDir . '/qrcodes';
+if (!is_dir($qrDir)) {
+    @mkdir($qrDir, 0755, true);
+}
+
+// Safe filename from student id + parameters to avoid collisions
+$safeId = preg_replace('/[^A-Za-z0-9_\-]/', '_', $studentId);
+$fileName = $safeId . "__{$size}__ecc-{$ecc}__qz-{$qzone}.png";
+$filePath = $qrDir . '/' . $fileName;
+
+// If file exists, reuse cache
+if (file_exists($filePath) && filesize($filePath) > 0) {
+    try {
+        $stmt = $pdo->prepare("INSERT INTO qr_generator_logs (student_id, qr_data, generated_at) VALUES (?, ?, NOW())");
+        $stmt->execute([$studentId, $qrData]);
+    } catch (Exception $e) {
+        error_log('QR log insert error (cache hit): ' . $e->getMessage());
+    }
+    echo json_encode([
+        'success' => true,
+        'cached' => true,
+        'qr_path' => 'assets/qrcodes/' . $fileName,
+        'qr_file' => $fileName,
+    ]);
+    exit;
+}
+
+// Download from API and save locally using cURL
+$ch = curl_init($apiUrl);
+curl_setopt_array($ch, [
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_FOLLOWLOCATION => true,
+    CURLOPT_TIMEOUT => 15,
+    CURLOPT_CONNECTTIMEOUT => 10,
+    CURLOPT_SSL_VERIFYHOST => 2,
+    CURLOPT_SSL_VERIFYPEER => true,
+    CURLOPT_USERAGENT => 'CCSDays QR Cacher/1.0',
+]);
+$imageData = curl_exec($ch);
+$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+$curlErr = curl_error($ch);
+curl_close($ch);
+
+if ($imageData === false || $httpCode !== 200) {
+    error_log('QR download failed: HTTP ' . $httpCode . ' Err: ' . $curlErr);
+    echo json_encode(['success' => false, 'message' => 'Failed to generate QR image.']);
+    exit;
+}
+
+// Save file
+$saved = @file_put_contents($filePath, $imageData);
+if ($saved === false) {
+    error_log('QR save failed: ' . $filePath);
+    echo json_encode(['success' => false, 'message' => 'Failed to save QR image.']);
+    exit;
+}
 
 // Log generation
 try {
@@ -66,5 +164,10 @@ try {
     error_log('QR log insert error: ' . $e->getMessage());
 }
 
-// Return API URL
-echo json_encode(['success' => true, 'qr_url' => $apiUrl]);
+// Return cached path relative to project root
+echo json_encode([
+    'success' => true,
+    'cached' => false,
+    'qr_path' => 'assets/qrcodes/' . $fileName,
+    'qr_file' => $fileName,
+]);
