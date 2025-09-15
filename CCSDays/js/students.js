@@ -100,7 +100,7 @@ function initializeStudentsPage() {
                     </div>
                 </div>
                 <div class="mt-3 flex-grow">
-                    <p class="text-gray-300"><span class="text-gray-400">Course:</span> ${student.Course}</p>
+                        <p class="text-gray-300"><span class="text-gray-400">Course:</span> ${student.Course || student.College || 'CCS'}</p>
                     <p class="text-gray-300"><span class="text-gray-400">Attendance:</span> <span class="${attendanceClass}">${attendance} events</span></p>
                 </div>
                 <div class="mt-4 flex justify-between">
@@ -321,7 +321,7 @@ async function updateStudent() {
                         </svg>
                         <h3 class="text-xl font-medium text-light mb-2">Student Updated</h3>
                         <p class="text-gray-400 mb-4">The student information has been updated successfully.</p>
-                        <button class="w-full py-2 px-4 bg-teal text-dark font-medium rounded-md hover:bg-teal-light transition-colors close-modal">
+                        <button class="w-full py-2 px-4 bg-teal text-dark font-medium rounded-md hover:bg-teal-light transition-colors close-modal cursor-pointer">
                             Close
                         </button>
                     </div>
@@ -386,7 +386,7 @@ async function deleteStudent() {
                         </svg>
                         <h3 class="text-xl font-medium text-light mb-2">Student Deleted</h3>
                         <p class="text-gray-400 mb-4">The student has been deleted successfully.</p>
-                        <button class="w-full py-2 px-4 bg-teal text-dark font-medium rounded-md hover:bg-teal-light transition-colors close-modal">
+                        <button class="w-full py-2 px-4 bg-teal text-dark font-medium rounded-md hover:bg-teal-light transition-colors close-modal cursor-pointer">
                             Close
                         </button>
                     </div>
@@ -465,7 +465,7 @@ function viewStudentDetails(studentId) {
                 <div class="grid grid-cols-2 gap-4 mb-6">
                     <div>
                         <p class="text-gray-400 text-sm mb-1">Course</p>
-                        <p class="text-light">${student.College || 'CCS'}</p>
+                        <p class="text-light">${student.Course || student.College || 'CCS'}</p>
                     </div>
                     <div>
                         <p class="text-gray-400 text-sm mb-1">Gender</p>
@@ -690,7 +690,7 @@ async function generateStudentQR(studentId) {
                 <div class="flex gap-3 justify-center">
                     <a href="${qrPath}" download title="Download QR"
                        class="px-4 py-2 bg-teal-900 text-teal-light rounded-md hover:bg-teal-800 transition-colors">Download</a>
-                    <button class="px-4 py-2 bg-dark-3 text-light rounded-md hover:bg-dark-4 transition-colors close-modal">Close</button>
+                    <button class="px-4 py-2 bg-dark-3 text-light rounded-md hover:bg-dark-4 transition-colors close-modal cursor-pointer">Close</button>
                 </div>
             </div>
         `;

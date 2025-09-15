@@ -112,7 +112,7 @@ if ($isPartial) {
         <div class="bg-dark-2 rounded-lg p-6 max-w-lg w-full mx-4">
             <div class="flex justify-between items-start mb-4">
                 <h2 class="text-xl font-semibold text-light">Student Details</h2>
-                <button class="close-modal text-gray-400 hover:text-light">
+                <button class="close-modal text-gray-400 hover:text-light cursor-pointer">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                     </svg>
@@ -303,7 +303,7 @@ if ($isPartial) {
             <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity"></div>
             <div class="relative bg-dark-2 rounded-lg max-w-md w-full mx-4 overflow-hidden shadow-xl transform transition-all">
                 <div class="absolute top-0 right-0 pt-4 pr-4">
-                    <button type="button" class="close-modal bg-transparent rounded-md text-gray-400 hover:text-light">
+                    <button type="button" class="close-modal bg-transparent rounded-md text-gray-400 hover:text-light cursor-pointer">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
                         </svg>
@@ -764,7 +764,7 @@ if ($isPartial) {
                             <div class="flex gap-3 justify-center">
                                 <a href="${qrPath}" download title="Download QR"
                                    class="px-4 py-2 bg-teal-900 text-teal-light rounded-md hover:bg-teal-800 transition-colors">Download</a>
-                                <button class="px-4 py-2 bg-dark-3 text-light rounded-md hover:bg-dark-4 transition-colors close-modal">Close</button>
+                                <button class="px-4 py-2 bg-dark-3 text-light rounded-md hover:bg-dark-4 transition-colors close-modal cursor-pointer">Close</button>
                             </div>
                         </div>
                     `;
@@ -782,7 +782,7 @@ if ($isPartial) {
                                 </svg>
                             </div>
                             <div class="text-light mb-4">Failed to generate QR. Please try again.</div>
-                            <button class="px-4 py-2 bg-dark-3 text-light rounded-md hover:bg-dark-4 transition-colors close-modal">Close</button>
+                            <button class="px-4 py-2 bg-dark-3 text-light rounded-md hover:bg-dark-4 transition-colors close-modal cursor-pointer">Close</button>
                         </div>
                     `;
                     document.querySelectorAll('.close-modal').forEach(btn => {
@@ -874,7 +874,7 @@ if ($isPartial) {
                     </div>
                     
                     <div class="flex space-x-3">
-                        <button type="button" class="flex-1 py-2 px-4 bg-dark-3 text-light rounded-md hover:bg-dark-4 transition-colors close-modal font-bold">
+                        <button type="button" class="flex-1 py-2 px-4 bg-dark-3 text-light rounded-md hover:bg-dark-4 transition-colors close-modal font-bold cursor-pointer">
                             Cancel
                         </button>
                         <button type="button" id="saveNewStudentBtn" class="flex-1 py-2 px-4 bg-teal-900 text-teal-light rounded-md hover:bg-teal-800 transition-colors font-bold">
@@ -943,7 +943,7 @@ if ($isPartial) {
                                     <p class="text-gray-400">The new student has been added to the system.</p>
                                 </div>
                                 
-                                <button class="w-full py-2 px-4 bg-teal-900 text-teal-light rounded-md hover:bg-teal-800 transition-colors close-modal font-bold">
+                                <button class="w-full py-2 px-4 bg-teal-900 text-teal-light rounded-md hover:bg-teal-800 transition-colors close-modal font-bold cursor-pointer">
                                     Close
                                 </button>
                             `;
@@ -1122,7 +1122,7 @@ if ($isPartial) {
                                 <p class="text-gray-400">The student information has been updated.</p>
                             </div>
                             
-                            <button class="w-full py-2 px-4 bg-teal-900 text-teal-light rounded-md hover:bg-teal-800 transition-colors close-modal font-bold">
+                            <button class="w-full py-2 px-4 bg-teal-900 text-teal-light rounded-md hover:bg-teal-800 transition-colors close-modal font-bold cursor-pointer">
                                 Close
                             </button>
                         `;
@@ -1195,7 +1195,7 @@ if ($isPartial) {
                     </div>
                     
                     <div class="flex space-x-3">
-                        <button class="flex-1 py-2 px-4 bg-dark-3 text-light rounded-md hover:bg-dark-4 transition-colors close-modal font-bold">
+                        <button class="flex-1 py-2 px-4 bg-dark-3 text-light rounded-md hover:bg-dark-4 transition-colors close-modal font-bold cursor-pointer">
                             CANCEL
                         </button>
                         <button id="confirmDeleteBtn" class="flex-1 py-2 px-4 bg-red-900 text-red-300 rounded-md hover:bg-red-800 transition-colors font-bold">
@@ -1228,7 +1228,7 @@ if ($isPartial) {
                                 <p class="text-gray-400">The student has been removed from the system.</p>
                             </div>
                             
-                            <button class="w-full py-2 px-4 bg-teal-900 text-teal-light rounded-md hover:bg-teal-800 transition-colors close-modal font-bold">
+                            <button class="w-full py-2 px-4 bg-teal-900 text-teal-light rounded-md hover:bg-teal-800 transition-colors close-modal font-bold cursor-pointer">
                                 Close
                             </button>
                         `;
