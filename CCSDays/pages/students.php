@@ -336,12 +336,22 @@ if ($isPartial) {
                             </div>
 
                             <div>
-                                <label for="edit_college" class="block text-sm font-medium text-gray-400">Course</label>
+                                <label for="edit_college" class="block text-sm font-medium text-gray-400">College</label>
                                 <select id="edit_college" name="college" class="mt-1 bg-dark-1 border border-dark-3 text-light w-full rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-teal-light">
                                     <option value="CCS">CCS</option>
+                                    <option value="COE">COE</option>
+                                    <option value="CBAA">CBAA</option>
+                                    <option value="CON">CON</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label for="edit_course" class="block text-sm font-medium text-gray-400">Course</label>
+                                <select id="edit_course" name="course" class="mt-1 bg-dark-1 border border-dark-3 text-light w-full rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-teal-light">
                                     <option value="BSIT">BSIT</option>
                                     <option value="BSCS">BSCS</option>
                                     <option value="BSIS">BSIS</option>
+                                    <option value="ACT">ACT</option>
                                 </select>
                             </div>
 
@@ -460,7 +470,7 @@ if ($isPartial) {
                         id: student.Student_ID,
                         name: student.Name,
                         year: yearLabel,
-                        course: student.College || 'CCS',
+                        course: student.Course || student.College,
                         email: student.Email || (() => {
                             const nameParts = student.Name.toLowerCase().split(' ');
                             const firstName = nameParts[0];
@@ -816,15 +826,24 @@ if ($isPartial) {
                                 <option value="4">4th Year</option>
                             </select>
                         </div>
-                        <div>
-                            <label class="block text-sm text-gray-400 mb-1">Course*</label>
-                            <select id="newCourse" required class="w-full bg-dark-1 border border-dark-4 rounded-md px-3 py-2 text-light focus:outline-none focus:ring-1 focus:ring-teal-light">
-                                <option value="CCS">CCS</option>
-                                <option value="BSIT">BSIT</option>
-                                <option value="BSCS">BSCS</option>
-                                <option value="BSIS">BSIS</option>
-                            </select>
-                        </div>
+                            <div>
+                                <label class="block text-sm text-gray-400 mb-1">College*</label>
+                                <select id="newCollege" required class="w-full bg-dark-1 border border-dark-4 rounded-md px-3 py-2 text-light focus:outline-none focus:ring-1 focus:ring-teal-light">
+                                    <option value="CCS">CCS</option>
+                                    <option value="COE">COE</option>
+                                    <option value="CBAA">CBAA</option>
+                                    <option value="CON">CON</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm text-gray-400 mb-1">Course*</label>
+                                <select id="newCourse" required class="w-full bg-dark-1 border border-dark-4 rounded-md px-3 py-2 text-light focus:outline-none focus:ring-1 focus:ring-teal-light">
+                                    <option value="BSIT">BSIT</option>
+                                    <option value="BSCS">BSCS</option>
+                                    <option value="BSIS">BSIS</option>
+                                    <option value="ACT">ACT</option>
+                                </select>
+                            </div>
                         <div>
                             <label class="block text-sm text-gray-400 mb-1">Gender*</label>
                             <select id="newGender" required class="w-full bg-dark-1 border border-dark-4 rounded-md px-3 py-2 text-light focus:outline-none focus:ring-1 focus:ring-teal-light">
@@ -876,6 +895,7 @@ if ($isPartial) {
                         const newName = document.getElementById('newName').value.trim();
                         const newId = document.getElementById('newId').value.trim();
                         const newYear = document.getElementById('newYear').value;
+                        const newCollege = document.getElementById('newCollege').value;
                         const newCourse = document.getElementById('newCourse').value;
                         const newGender = document.getElementById('newGender').value;
                         const newEmail = document.getElementById('newEmail').value.trim();
@@ -895,7 +915,8 @@ if ($isPartial) {
                         formData.append('name', newName);
                         formData.append('student_id', newId);
                         formData.append('year', newYear);
-                        formData.append('college', newCourse);
+                        formData.append('college', newCollege);
+                        formData.append('course', newCourse);
                         formData.append('gender', newGender);
                         formData.append('email', newEmail);
                         formData.append('phone', newPhone);
@@ -994,12 +1015,21 @@ if ($isPartial) {
                                 </select>
                             </div>
                             <div>
+                                <label class="block text-sm text-gray-400 mb-1">College*</label>
+                                <select id="editCollege" required class="w-full bg-dark-1 border border-dark-4 rounded-md px-3 py-2 text-light focus:outline-none focus:ring-1 focus:ring-teal-light">
+                                                <option value="CCS" ${student.college === 'CCS' ? 'selected' : ''}>CCS</option>
+                                                <option value="COE" ${student.college === 'COE' ? 'selected' : ''}>COE</option>
+                                                <option value="CBAA" ${student.college === 'CBAA' ? 'selected' : ''}>CBAA</option>
+                                                <option value="CON" ${student.college === 'CON' ? 'selected' : ''}>CON</option>
+                                </select>
+                            </div>
+                            <div>
                                 <label class="block text-sm text-gray-400 mb-1">Course*</label>
                                 <select id="editCourse" required class="w-full bg-dark-1 border border-dark-4 rounded-md px-3 py-2 text-light focus:outline-none focus:ring-1 focus:ring-teal-light">
-                                    <option value="CCS" ${student.course === 'CCS' ? 'selected' : ''}>CCS</option>
-                                    <option value="BSIT" ${student.course === 'BSIT' ? 'selected' : ''}>BSIT</option>
-                                    <option value="BSCS" ${student.course === 'BSCS' ? 'selected' : ''}>BSCS</option>
-                                    <option value="BSIS" ${student.course === 'BSIS' ? 'selected' : ''}>BSIS</option>
+                                                <option value="BSIT" ${student.course === 'BSIT' ? 'selected' : ''}>BSIT</option>
+                                                <option value="BSCS" ${student.course === 'BSCS' ? 'selected' : ''}>BSCS</option>
+                                                <option value="BSIS" ${student.course === 'BSIS' ? 'selected' : ''}>BSIS</option>
+                                                <option value="ACT" ${student.course === 'ACT' ? 'selected' : ''}>ACT</option>
                                 </select>
                             </div>
                             <div>
@@ -1052,6 +1082,7 @@ if ($isPartial) {
                             // Get values from form
                             const editName = document.getElementById('editName').value.trim();
                             const editYear = document.getElementById('editYear').value;
+                            const editCollege = document.getElementById('editCollege').value;
                             const editCourse = document.getElementById('editCourse').value;
                             const editGender = document.getElementById('editGender').value;
                             const editEmail = document.getElementById('editEmail').value.trim();
@@ -1071,7 +1102,8 @@ if ($isPartial) {
                             formData.append('student_id', student.id);
                             formData.append('name', editName);
                             formData.append('year', editYear);
-                            formData.append('college', editCourse);
+                            formData.append('college', editCollege);
+                            formData.append('course', editCourse);
                             formData.append('gender', editGender);
                             formData.append('email', editEmail);
                             formData.append('phone', editPhone);

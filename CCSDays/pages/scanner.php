@@ -292,7 +292,7 @@ try {
 								<div class="grid grid-cols-2 gap-4 text-sm mt-4">
 									<div>
 										<div class="text-gray-400">Course</div>
-										<div class="text-light"><?php echo htmlspecialchars($latestStudent['College'] ?? 'CCS'); ?></div>
+										<div class="text-light"><?php echo htmlspecialchars($latestStudent['Course']); ?></div>
 									</div>
 									<div>
 										<div class="text-gray-400">Year</div>
@@ -522,7 +522,7 @@ try {
 		                <div class=\"grid grid-cols-2 gap-4 text-sm\">
 		                    <div>
 		                        <div class=\"text-gray-400\">Course</div>
-		                        <div class=\"text-light\">${student.College || 'CCS'}</div>
+		                        <div class=\"text-light\">${student.Course}</div>
 		                    </div>
 		                    <div>
 		                        <div class=\"text-gray-400\">Year</div>

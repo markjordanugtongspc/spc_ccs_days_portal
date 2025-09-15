@@ -665,7 +665,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                         </div>
                                     </div>
                                     <div class="mt-3 flex-grow">
-                                        <p class="text-gray-300"><span class="text-gray-400">Course:</span> ${student.College || 'CCS'}</p>
+                                        <p class="text-gray-300"><span class="text-gray-400">Course:</span> ${student.Course}</p>
                                         <p class="text-gray-300"><span class="text-gray-400">Attendance:</span> <span class="${attendanceClass}">${attendance} events</span></p>
                                     </div>
                                     <div class="mt-4 flex justify-between space-x-4">
@@ -769,7 +769,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                     </div>
                                     <div>
                                         <p class="text-gray-400 mb-1">Course</p>
-                                        <p class="text-light">${student.College || 'CCS'}</p>
+                                        <p class="text-light">${student.Course}</p>
                                     </div>
                                     <div>
                                         <p class="text-gray-400 mb-1">Gender</p>

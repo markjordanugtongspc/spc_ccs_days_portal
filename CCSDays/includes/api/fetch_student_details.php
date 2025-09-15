@@ -23,7 +23,7 @@ if (!$student_id) {
 }
 
 // Prepare query to fetch student details
-$query = "SELECT * FROM students WHERE Student_ID = ?";
+$query = "SELECT Student_ID, Name, Year, College, Course, Gender, Attendance FROM students WHERE Student_ID = ?";
 $stmt = $conn->prepare($query);
 $stmt->bind_param("s", $student_id);
 $stmt->execute();

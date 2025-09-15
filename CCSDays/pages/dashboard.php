@@ -251,10 +251,10 @@ $userInitials = strtoupper(substr($userName, 0, 1)) . (strpos($userName, ' ') !=
 										Quick Actions
 									</div>
 									<div class="grid grid-cols-2 gap-4">
-										<button id="addEventBtn" class="action-button">Add New Event</button>
-										<button id="approveEventsBtn" class="action-button">Approve Events</button>
-										<button class="action-button">Generate Reports</button>
-										<button class="action-button">Manage Users</button>
+										<button id="addEventBtn" class="action-button cursor-pointer">Add New Event</button>
+										<button id="approveEventsBtn" class="action-button  cursor-pointer">Approve Events</button>
+										<button class="action-button  cursor-pointer">Generate Reports</button>
+										<button class="action-button  cursor-pointer">Manage Users</button>
 									</div>
 								</div>
 							</div>

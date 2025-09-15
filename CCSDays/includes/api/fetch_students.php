@@ -23,14 +23,14 @@ $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 8;
 $offset = ($page - 1) * $limit;
 
 // Prepare base query
-$query = "SELECT * FROM students WHERE 1=1";
+$query = "SELECT Student_ID, Name, Year, College, Course, Gender, Attendance FROM students WHERE 1=1";
 $countQuery = "SELECT COUNT(*) as total FROM students WHERE 1=1";
 
 // Add search condition if search term is provided
 if (!empty($search)) {
     $searchTerm = "%{$search}%";
-    $query .= " AND (Name LIKE ? OR Student_ID LIKE ? OR College LIKE ?)";
-    $countQuery .= " AND (Name LIKE ? OR Student_ID LIKE ? OR College LIKE ?)";
+    $query .= " AND (Name LIKE ? OR Student_ID LIKE ? OR College LIKE ? OR Course LIKE ?)";
+    $countQuery .= " AND (Name LIKE ? OR Student_ID LIKE ? OR College LIKE ? OR Course LIKE ?)";
 }
 
 // Add ordering
@@ -39,7 +39,7 @@ $query .= " ORDER BY Student_ID DESC LIMIT ? OFFSET ?";
 // Prepare and execute count query
 $countStmt = $conn->prepare($countQuery);
 if (!empty($search)) {
-    $countStmt->bind_param("sss", $searchTerm, $searchTerm, $searchTerm);
+    $countStmt->bind_param("ssss", $searchTerm, $searchTerm, $searchTerm, $searchTerm);
 }
 $countStmt->execute();
 $totalResult = $countStmt->get_result()->fetch_assoc();
@@ -48,7 +48,7 @@ $total = $totalResult['total'];
 // Prepare and execute main query
 $stmt = $conn->prepare($query);
 if (!empty($search)) {
-    $stmt->bind_param("sssii", $searchTerm, $searchTerm, $searchTerm, $limit, $offset);
+    $stmt->bind_param("ssssii", $searchTerm, $searchTerm, $searchTerm, $searchTerm, $limit, $offset);
 } else {
     $stmt->bind_param("ii", $limit, $offset);
 }

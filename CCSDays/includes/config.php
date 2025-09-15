@@ -1,8 +1,4 @@
 <?php
-// Enable error reporting for debugging
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-
 $servername = "localhost";
 $username = "root";
 $password = ""; 
@@ -14,7 +10,6 @@ $conn = new mysqli($servername, $username, $password, $database, $port);
 
 // Check connection
 if ($conn->connect_error) {
-    error_log("Database connection failed: " . $conn->connect_error);
     die("Connection failed: " . $conn->connect_error);
 }
 
@@ -33,7 +28,6 @@ function getDbConnection() {
     try {
         return new PDO($dsn, $username, $password, $options);
     } catch (PDOException $e) {
-        error_log("PDO Connection failed: " . $e->getMessage());
         throw $e;
     }
 }
