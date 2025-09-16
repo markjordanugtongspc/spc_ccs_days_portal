@@ -53,6 +53,10 @@ function ensureEventsTableExists($conn) {
             `description` TEXT,
             `reminder_enabled` BOOLEAN DEFAULT FALSE,
             `reminder_time` VARCHAR(10),
+            `signin_start` TIME,           -- NEW: Sign-in window start time
+            `signin_end` TIME,             -- NEW: Sign-in window end time
+            `signout_start` TIME,          -- NEW: Sign-out window start time
+            `signout_end` TIME,            -- NEW: Sign-out window end time
             `status` ENUM('pending', 'approved') DEFAULT 'pending',
             `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -174,6 +178,12 @@ function createEvent($conn) {
     $reminderEnabled = isset($data['reminder']) && $data['reminder'] ? 1 : 0;
     $reminderTime = isset($data['reminderOption']) ? $conn->real_escape_string($data['reminderOption']) : null;
     
+    // NEW: Sanitize sign-in/sign-out time fields
+    $signinStart = isset($data['signin_start']) ? $conn->real_escape_string($data['signin_start']) : null;
+    $signinEnd = isset($data['signin_end']) ? $conn->real_escape_string($data['signin_end']) : null;
+    $signoutStart = isset($data['signout_start']) ? $conn->real_escape_string($data['signout_start']) : null;
+    $signoutEnd = isset($data['signout_end']) ? $conn->real_escape_string($data['signout_end']) : null;
+    
     // Log the date format received
     error_log("Original date format: $date");
     
@@ -197,9 +207,14 @@ function createEvent($conn) {
     }
     
     // Insert event into database
-    $sql = "INSERT INTO events (name, event_date, venue, description, reminder_enabled, reminder_time, status)
+    $sql = "INSERT INTO events (name, event_date, venue, description, reminder_enabled, reminder_time, 
+            signin_start, signin_end, signout_start, signout_end, status)
             VALUES ('$name', '$formattedDate', '$venue', '$description', $reminderEnabled, " .
-            ($reminderTime ? "'$reminderTime'" : "NULL") . ", 'pending')";
+            ($reminderTime ? "'$reminderTime'" : "NULL") . ", " .
+            ($signinStart ? "'$signinStart'" : "NULL") . ", " .
+            ($signinEnd ? "'$signinEnd'" : "NULL") . ", " .
+            ($signoutStart ? "'$signoutStart'" : "NULL") . ", " .
+            ($signoutEnd ? "'$signoutEnd'" : "NULL") . ", 'pending')";
     
     // Log SQL query
     error_log("SQL Query: " . $sql);
@@ -280,6 +295,12 @@ function updateEvent($conn) {
     $reminderTime = isset($data['reminderOption']) ? $conn->real_escape_string($data['reminderOption']) : null;
     $status = isset($data['status']) ? $conn->real_escape_string($data['status']) : 'pending';
     
+    // NEW: Sanitize sign-in/sign-out time fields
+    $signinStart = isset($data['signin_start']) ? $conn->real_escape_string($data['signin_start']) : null;
+    $signinEnd = isset($data['signin_end']) ? $conn->real_escape_string($data['signin_end']) : null;
+    $signoutStart = isset($data['signout_start']) ? $conn->real_escape_string($data['signout_start']) : null;
+    $signoutEnd = isset($data['signout_end']) ? $conn->real_escape_string($data['signout_end']) : null;
+    
     // Update event in database
     $sql = "UPDATE events SET 
             name = '$name', 
@@ -288,6 +309,10 @@ function updateEvent($conn) {
             description = '$description', 
             reminder_enabled = $reminderEnabled, 
             reminder_time = " . ($reminderTime ? "'$reminderTime'" : "NULL") . ",
+            signin_start = " . ($signinStart ? "'$signinStart'" : "NULL") . ",
+            signin_end = " . ($signinEnd ? "'$signinEnd'" : "NULL") . ",
+            signout_start = " . ($signoutStart ? "'$signoutStart'" : "NULL") . ",
+            signout_end = " . ($signoutEnd ? "'$signoutEnd'" : "NULL") . ",
             status = '$status'
             WHERE id = $id";
     
@@ -375,9 +400,7 @@ function handleCountRequest($conn) {
             'change' => $change
         ]);
     } catch (Exception $e) {
-        echo json_encode([
-            'success' => false,
-            'error' => 'Database error: ' . $e->getMessage()
-        ]);
+        http_response_code(500);
+        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
     }
 }

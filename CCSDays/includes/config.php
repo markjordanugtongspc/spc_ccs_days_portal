@@ -5,7 +5,7 @@ ini_set('display_errors', 1);
 
 $servername = "localhost";
 $username = "root";
-$password = ""; 
+$password = "";
 $database = "ccs_events_db_2025";
 $port = 3306;
 
@@ -22,7 +22,8 @@ if ($conn->connect_error) {
 $conn->set_charset("utf8mb4");
 
 // Helper function for PDO usage in API endpoints
-function getDbConnection() {
+function getDbConnection()
+{
     global $servername, $username, $password, $database, $port;
     $dsn = "mysql:host=$servername;port=$port;dbname=$database;charset=utf8mb4";
     $options = [
@@ -37,4 +38,3 @@ function getDbConnection() {
         throw $e;
     }
 }
-?>

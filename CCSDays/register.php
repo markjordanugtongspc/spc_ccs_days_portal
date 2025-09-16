@@ -9,53 +9,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password = isset($_POST['password']) ? trim($_POST['password']) : '';
     $confirmPassword = isset($_POST['confirm_password']) ? trim($_POST['confirm_password']) : '';
     $role = 'admin'; // Fixed role as admin
-    
+
     $errors = [];
-    
+
     // Validate inputs
     if (empty($name)) {
         $errors[] = "Name is required";
     }
-    
+
     if (empty($email)) {
         $errors[] = "Email is required";
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $errors[] = "Invalid email format";
     }
-    
+
     if (empty($password)) {
         $errors[] = "Password is required";
     } elseif (strlen($password) < 6) {
         $errors[] = "Password must be at least 6 characters";
     }
-    
+
     if ($password !== $confirmPassword) {
         $errors[] = "Passwords do not match";
     }
-    
+
     // Check if email already exists
     if (empty($errors)) {
         $stmt = $conn->prepare("SELECT id FROM staff WHERE email = ?");
         $stmt->bind_param("s", $email);
         $stmt->execute();
         $result = $stmt->get_result();
-        
+
         if ($result->num_rows > 0) {
             $errors[] = "Email already exists";
         }
         $stmt->close();
     }
-    
+
     // Insert new admin if no errors
     if (empty($errors)) {
         // Hash the password
         $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-        
+
         // Verify the hash works before storing it
         if (password_verify($password, $hashedPassword)) {
             $stmt = $conn->prepare("INSERT INTO staff (name, email, password, role) VALUES (?, ?, ?, ?)");
             $stmt->bind_param("ssss", $name, $email, $hashedPassword, $role);
-            
+
             if ($stmt->execute()) {
                 // Log the successful registration and the hash used
                 error_log("Admin registered successfully: " . $email);
@@ -73,6 +73,7 @@ $conn->close();
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -83,15 +84,14 @@ $conn->close();
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
-        rel="stylesheet"
-    />
+        rel="stylesheet" />
     <link rel="stylesheet" href="styles.css">
 </head>
+
 <body class="bg-dark-1 text-light">
     <!-- Navigation Header -->
     <nav
-        class="text-light shadow-md p-4 fixed top-0 left-0 w-full z-40 bg-dark-2 bg-opacity-90 backdrop-blur-sm"
-    >
+        class="text-light shadow-md p-4 fixed top-0 left-0 w-full z-40 bg-dark-2 bg-opacity-90 backdrop-blur-sm">
         <div class="flex items-center justify-between">
             <!-- Logo Icon -->
             <div class="flex items-center">
@@ -103,14 +103,12 @@ $conn->close();
             <div class="flex items-center space-x-6">
                 <a
                     href="index.php"
-                    class="hover-teal transition-all text-teal-light text-lg font-medium"
-                >
+                    class="hover-teal transition-all text-teal-light text-lg font-medium">
                     Login
                 </a>
                 <a
                     href="register.php"
-                    class="hover-teal transition-all text-teal-light border-b-2 border-teal text-lg font-medium"
-                >
+                    class="hover-teal transition-all text-teal-light border-b-2 border-teal text-lg font-medium">
                     Register
                 </a>
                 <button id="themeToggle" class="text-teal-light hover-teal transition-all">
@@ -130,7 +128,7 @@ $conn->close();
                 <h2 class="text-4xl font-extrabold mb-8 text-center text-teal-light tracking-tight">
                     Admin Registration
                 </h2>
-                
+
                 <?php if (isset($errors) && !empty($errors)): ?>
                     <div class="bg-red-900 bg-opacity-50 border border-red-500 text-light p-4 mb-6 rounded-lg">
                         <ul class="list-disc list-inside">
@@ -140,20 +138,19 @@ $conn->close();
                         </ul>
                     </div>
                 <?php endif; ?>
-                
+
                 <?php if (isset($success)): ?>
                     <div class="bg-teal bg-opacity-20 border border-teal-light text-light p-4 mb-6 rounded-lg">
                         <?php echo $success; ?>
                     </div>
                 <?php endif; ?>
-                
+
                 <form method="POST" action="register.php" class="text-left">
                     <!-- Name Input -->
                     <div class="mb-6">
                         <label
                             for="name"
-                            class="block text-xl text-teal-light mb-2 font-medium tracking-wide"
-                        >
+                            class="block text-xl text-teal-light mb-2 font-medium tracking-wide">
                             Name
                         </label>
                         <input
@@ -162,16 +159,14 @@ $conn->close();
                             name="name"
                             value="<?php echo isset($name) ? htmlspecialchars($name) : ''; ?>"
                             class="w-full px-4 py-3 rounded-lg bg-dark-1 border border-teal border-opacity-50 text-light focus:outline-none focus:border-teal-light focus:ring-2 focus:ring-teal focus:ring-opacity-20 shadow-inner-teal focus-animation text-base font-medium"
-                            placeholder="Enter your full name"
-                        />
+                            placeholder="Enter your full name" />
                     </div>
 
                     <!-- Email Input -->
                     <div class="mb-6">
                         <label
                             for="email"
-                            class="block text-xl text-teal-light mb-2 font-medium tracking-wide"
-                        >
+                            class="block text-xl text-teal-light mb-2 font-medium tracking-wide">
                             Email
                         </label>
                         <input
@@ -180,16 +175,14 @@ $conn->close();
                             name="email"
                             value="<?php echo isset($email) ? htmlspecialchars($email) : ''; ?>"
                             class="w-full px-4 py-3 rounded-lg bg-dark-1 border border-teal border-opacity-50 text-light focus:outline-none focus:border-teal-light focus:ring-2 focus:ring-teal focus:ring-opacity-20 shadow-inner-teal focus-animation text-base font-medium"
-                            placeholder="Enter your email"
-                        />
+                            placeholder="Enter your email" />
                     </div>
 
                     <!-- Password Input -->
                     <div class="mb-6">
                         <label
                             for="password"
-                            class="block text-xl text-teal-light mb-2 font-medium tracking-wide"
-                        >
+                            class="block text-xl text-teal-light mb-2 font-medium tracking-wide">
                             Password
                         </label>
                         <input
@@ -197,16 +190,14 @@ $conn->close();
                             id="password"
                             name="password"
                             class="w-full px-4 py-3 rounded-lg bg-dark-1 border border-teal border-opacity-50 text-light focus:outline-none focus:border-teal-light focus:ring-2 focus:ring-teal focus:ring-opacity-20 shadow-inner-teal focus-animation text-base font-medium"
-                            placeholder="Enter your password"
-                        />
+                            placeholder="Enter your password" />
                     </div>
-                    
+
                     <!-- Confirm Password Input -->
                     <div class="mb-8">
                         <label
                             for="confirm_password"
-                            class="block text-xl text-teal-light mb-2 font-medium tracking-wide"
-                        >
+                            class="block text-xl text-teal-light mb-2 font-medium tracking-wide">
                             Confirm Password
                         </label>
                         <input
@@ -214,22 +205,20 @@ $conn->close();
                             id="confirm_password"
                             name="confirm_password"
                             class="w-full px-4 py-3 rounded-lg bg-dark-1 border border-teal border-opacity-50 text-light focus:outline-none focus:border-teal-light focus:ring-2 focus:ring-teal focus:ring-opacity-20 shadow-inner-teal focus-animation text-base font-medium"
-                            placeholder="Confirm your password"
-                        />
+                            placeholder="Confirm your password" />
                     </div>
 
                     <!-- Register Button -->
                     <button
                         type="submit"
-                        class="w-full bg-gradient-button hover:opacity-90 text-light py-3 px-6 rounded-lg font-bold text-lg tracking-wide transition-all shadow-teal btn-click-animation"
-                    >
+                        class="w-full bg-gradient-button hover:opacity-90 text-light py-3 px-6 rounded-lg font-bold text-lg tracking-wide transition-all shadow-teal btn-click-animation">
                         Register Admin
                     </button>
-                    
+
                     <!-- Login link -->
                     <div class="text-center mt-6">
                         <p class="text-light text-lg">
-                            Already have an account? 
+                            Already have an account?
                             <a href="index.php" class="text-teal-light hover-teal transition-all font-medium">Login</a>
                         </p>
                     </div>
@@ -260,8 +249,7 @@ $conn->close();
                     <img
                         src="includes/images/spc-ccs-logo.png"
                         alt="SPC CCS Logo"
-                        class="w-32 h-32 mx-auto"
-                    />
+                        class="w-32 h-32 mx-auto" />
                 </div>
                 <h1 class="text-5xl font-extrabold mb-4 text-light tracking-tight leading-tight">
                     Admin
@@ -282,4 +270,5 @@ $conn->close();
 
     <script src="js/dashboard.js"></script>
 </body>
-</html> 
+
+</html>
