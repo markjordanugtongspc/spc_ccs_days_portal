@@ -85,6 +85,18 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
+  function showErrorAlert(title, message) {
+    Toast.fire({
+      icon: "error",
+      title: title,
+      text: message,
+      iconColor: 'rgb(239, 68, 68)', // Red color for error icon
+    });
+  }
+
+  // Flag to track if we're currently processing a scan/submission
+  let isProcessing = false;
+
   // Function to update Recent Activity section
   async function updateRecentActivity() {
     try {
@@ -100,12 +112,23 @@ document.addEventListener("DOMContentLoaded", function () {
           // Clear existing entries
           activityContainer.innerHTML = "";
 
+          // Auto-sign student IDs (these students get auto attendance)
+          const autoSignStudents = ['2022-00752', '2022-00769', '2021-01066', '2022-00008', '2022-01308'];
+
           // Add new entries
           data.entries.forEach((entry) => {
             const timeIn = new Date(entry.Sign_In_Time).toLocaleTimeString([], {
               hour: "2-digit",
               minute: "2-digit",
             });
+
+            // Logic for determining type:
+            // 1. If student is in auto-sign list OR has QR_Code format (contains '-'), it's "Auto"
+            // 2. Otherwise it's "Manual" (manual entry)
+            const isAutoSign = autoSignStudents.includes(entry.Student_ID) || 
+                              (entry.QR_Code && entry.QR_Code.includes('-'));
+            const typeClass = isAutoSign ? 'bg-blue-900 text-blue-300' : 'bg-gray-700 text-gray-300';
+            const typeLabel = isAutoSign ? 'Auto' : 'Manual';
 
             const entryElement = document.createElement("div");
             entryElement.className = "grid grid-cols-7 gap-4 p-4";
@@ -116,7 +139,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         <div>${entry.Event_Name || "N/A"}</div>
                         <div><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-900 text-green-300">Sign In</span></div>
                         <div>${timeIn}</div>
-                        <div><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-700 text-gray-300">Manual</span></div>
+                        <div><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${typeClass}">${typeLabel}</span></div>
                     `;
 
             activityContainer.appendChild(entryElement);
@@ -139,7 +162,7 @@ document.addEventListener("DOMContentLoaded", function () {
                             <div>${entry.Event_Name || "N/A"}</div>
                             <div><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-900 text-red-300">Sign Out</span></div>
                             <div>${timeOut}</div>
-                            <div><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-700 text-gray-300">Manual</span></div>
+                            <div><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${typeClass}">${typeLabel}</span></div>
                         `;
 
               activityContainer.appendChild(signOutElement);
@@ -151,18 +174,6 @@ document.addEventListener("DOMContentLoaded", function () {
       console.error("Error updating recent activity:", error);
     }
   }
-
-  function showErrorAlert(title, message) {
-    Toast.fire({
-      icon: "error",
-      title: title,
-      text: message,
-      iconColor: 'rgb(239, 68, 68)', // Red color for error icon
-    });
-  }
-
-  // Flag to track if we're currently processing a scan/submission
-  let isProcessing = false;
 
   // Event selection handler
   if (eventSelection) {
@@ -184,8 +195,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
         // If scanner was already running, restart it with the new event context
         if (html5QrCode && html5QrCode.isScanning) {
-          stopScannerBtn.click();
-          setTimeout(() => startScannerBtn.click(), 500);
+          stopScanner();
+          setTimeout(() => startScanner(), 500);
         }
       } else {
         selectedEventInfo.classList.add("hidden");
@@ -193,7 +204,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         // Stop scanner if no event is selected
         if (html5QrCode && html5QrCode.isScanning) {
-          stopScannerBtn.click();
+          stopScanner();
         }
 
         // Remove saved event from sessionStorage
@@ -347,23 +358,6 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 
-  // Initialize Html5Qrcode scanner
-  // Wait until the DOM is fully loaded to initialize QR scanner
-  setTimeout(() => {
-    try {
-      html5QrCode = new Html5Qrcode("reader");
-      console.log("HTML5 QR Code scanner initialized successfully");
-
-      // Auto-start scanner if previously active
-      if (shouldAutoStartScanner()) {
-        console.log("Auto-starting scanner based on saved preference");
-        startScannerBtn.click();
-      }
-    } catch (error) {
-      console.error("Error initializing QR scanner:", error);
-    }
-  }, 500);
-
   // Utility to display QR scan results and errors
   function showScanMessage(message, isError = false) {
     // Clear any previous error messages
@@ -392,21 +386,75 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  // Override start button to use html5-qrcode with facingMode
-  startScannerBtn.addEventListener("click", function () {
+  // Function to handle the QR code scanning
+  function handleQRCodeScan(decodedText) {
+    // Check if we're already processing a scan
+    if (isProcessing) {
+      console.log("Already processing a scan, ignoring this one");
+      return;
+    }
+
+    // Set processing flag
+    isProcessing = true;
+
+    // Show the decoded text in the scan result area
+    showScanMessage(decodedText);
+
+    // Send the scanned QR code to the backend API with event ID
+    fetch("../includes/api/attendance_handler.php", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body:
+        "qr_code=" +
+        encodeURIComponent(decodedText) +
+        "&event_id=" +
+        encodeURIComponent(selectedEventId),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.success) {
+          showSuccessAlert(data.message);
+          
+          // Play success sound if available
+          if (typeof window.playSuccessAudio === "function") {
+            try {
+              window.playSuccessAudio();
+            } catch (_) {}
+          }
+          
+          // Show latest person
+          const isSignOut = data.message.toLowerCase().includes("signed out");
+          const statusLabel = isSignOut ? "Sign Out" : "Sign In";
+          showLatestPerson(decodedText, statusLabel);
+          
+          // Update the recent activity section
+          updateRecentActivity();
+        } else {
+          showErrorAlert("Error", data.message);
+        }
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+        showErrorAlert("Error", "Failed to process QR code");
+      })
+      .finally(() => {
+        // Reset processing flag after a delay to prevent rapid successive scans
+        setTimeout(() => {
+          isProcessing = false;
+        }, 1500);
+      });
+  }
+
+  // Start the scanner
+  function startScanner() {
     // Check if event is selected
     if (!selectedEventId) {
       showScanMessage("Please select an event first", true);
       return;
     }
-
-    // Clear any previous results
-    scanResult.innerHTML =
-      '<span class="text-gray-500">Initializing camera...</span>';
-
-    // Save scanner state as active
-    saveActiveScannerState(true);
-
+    
     // Check if scanner is already initialized
     if (!html5QrCode) {
       try {
@@ -418,244 +466,41 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     }
 
-    // Start scanning directly with facingMode
     html5QrCode
       .start(
         { facingMode: "environment" },
-        { fps: 64, qrbox: { width: 480, height: 480 } }, // box change here
-        async (decodedText, decodedResult) => {
-          console.log("Decoded:", decodedText);
-
-          // Check if we're already processing a scan
-          if (isProcessing) {
-            console.log("Already processing a scan, ignoring this one");
-            return;
-          }
-
-          // Set processing flag
-          isProcessing = true;
-
-          // Show the decoded text in the scan result area
-          showScanMessage(decodedText);
-
-          // Send the scanned QR code to the backend API with event ID
-          fetch("../includes/api/attendance_handler.php", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/x-www-form-urlencoded", // Suitable for simple key-value pairs
-            },
-            body:
-              "qr_code=" +
-              encodeURIComponent(decodedText) +
-              "&event_id=" +
-              encodeURIComponent(selectedEventId), // Send qr_code=value and event_id
-          })
-            .then((response) => {
-              if (!response.ok) {
-                // Handle HTTP errors (e.g., 404, 500)
-                throw new Error(`HTTP error! status: ${response.status}`);
-              }
-              return response.json(); // Parse the JSON response body
-            })
-            .then(async (data) => {
-              // Create and show a toast notification with the API response
-              const toastElement = document.createElement("div");
-              toastElement.id = "qr-toast-container";
-
-              // Determine sign-out vs sign-in for color palette
-              const isSignOut =
-                data.success &&
-                data.message.toLowerCase().includes("signed out");
-              const toastClass = data.success
-                ? isSignOut
-                  ? "text-red-500"
-                  : "text-teal-500"
-                : "text-red-500";
-              const iconPath = data.success
-                ? "M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" // check icon
-                : "M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"; // error icon
-              const iconSrText = data.success
-                ? isSignOut
-                  ? "Sign-out icon"
-                  : "Success icon"
-                : "Error icon";
-              const message =
-                data.message ||
-                (data.success
-                  ? "Operation successful."
-                  : "An unknown error occurred."); // Use API message or default
-
-              toastElement.innerHTML = `
-                    <div id="toast-dynamic" class="fixed bottom-5 right-5 flex items-center w-full max-w-xs p-4 mb-4 ${toastClass} bg-dark-2 rounded-lg shadow z-50" role="alert">
-                        <div class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8 ${toastClass} bg-dark-2 rounded-lg">
-                            <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
-                                 <path stroke-linecap="round" stroke-linejoin="round" d="${iconPath}" />
-                             </svg>
-                            <span class="sr-only">${iconSrText}</span>
-                        </div>
-                        <div class="ms-3 text-sm font-normal">${message}</div>
-                        <button type="button" id="close-toast" class="ms-auto -mx-1.5 -my-1.5 bg-dark-2 ${toastClass} hover:text-gray-900 rounded-lg focus:ring-2 focus:ring-gray-300 p-1.5 hover:bg-gray-100 inline-flex items-center justify-center cursor-pointer h-8 w-8" aria-label="Close">
-                            <span class="sr-only">Close</span>
-                            <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
-                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
-                            </svg>
-                        </button>
-                    </div>
-                `;
-              // Make sure the toast container doesn't already exist before appending
-              const existingToast =
-                document.getElementById("qr-toast-container");
-              if (existingToast) {
-                existingToast.remove();
-              }
-              document.body.appendChild(toastElement);
-
-              // Play success sound if available
-              if (
-                data.success &&
-                typeof window.playSuccessAudio === "function"
-              ) {
-                try {
-                  window.playSuccessAudio();
-                } catch (_) {}
-              }
-
-              // Add event listener to close button
-              const closeButton = document.getElementById("close-toast");
-              if (closeButton) {
-                closeButton.addEventListener("click", function () {
-                  const toastContainer =
-                    document.getElementById("qr-toast-container");
-                  if (toastContainer) {
-                    toastContainer.remove();
-                  }
-                });
-              }
-
-              // Auto-close toast after short delay, then redirect with params for PHP to render latest student
-              setTimeout(() => {
-                const toastContainer =
-                  document.getElementById("qr-toast-container");
-                if (toastContainer) {
-                  toastContainer.remove();
-                }
-                if (data.success) {
-                  const statusLabel = isSignOut ? "Sign Out" : "Sign In";
-                  showLatestPerson(decodedText, statusLabel);
-
-                  // Update recent activity after successful scan
-                  updateRecentActivity();
-                }
-                // Reset processing flag after a delay to prevent rapid successive scans
-                setTimeout(() => {
-                  console.log("Cooldown complete, ready for next scan");
-                  isProcessing = false;
-                }, 1500); // Wait for toast to disappear
-              }, 1500);
-            })
-            .catch((error) => {
-              console.error("Fetch Error:", error);
-              // Show an error toast if the fetch itself failed
-              const toastElement = document.createElement("div");
-              toastElement.id = "qr-toast-container";
-              toastElement.innerHTML = `
-                     <div id="toast-fetch-error" class="fixed bottom-5 right-5 flex items-center w-full max-w-xs p-4 mb-4 text-red-500 bg-dark-2 rounded-lg shadow z-50" role="alert">
-                        <div class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8 text-red-500 bg-dark-2 rounded-lg">
-                             <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
-                                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                             </svg>
-                             <span class="sr-only">Error icon</span>
-                         </div>
-                         <div class="ms-3 text-sm font-normal">API Error: ${error.message}</div>
-                         <button type="button" id="close-toast" class="ms-auto -mx-1.5 -my-1.5 bg-dark-2 text-red-500 hover:text-gray-900 rounded-lg focus:ring-2 focus:ring-gray-300 p-1.5 hover:bg-gray-100 inline-flex items-center justify-center cursor-pointer h-8 w-8" aria-label="Close">
-                             <span class="sr-only">Close</span>
-                             <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
-                                 <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
-                             </svg>
-                         </button>
-                     </div>
-                 `;
-              // Remove existing toast before adding new one
-              const existingToast =
-                document.getElementById("qr-toast-container");
-              if (existingToast) {
-                existingToast.remove();
-              }
-              document.body.appendChild(toastElement);
-
-              // Add close functionality here too
-              const closeButton = document.getElementById("close-toast");
-              if (closeButton) {
-                closeButton.addEventListener("click", function () {
-                  const toastContainer =
-                    document.getElementById("qr-toast-container");
-                  if (toastContainer) {
-                    toastContainer.remove();
-                  }
-                });
-              }
-              // Optional: Auto-close
-              setTimeout(() => {
-                const toastContainer =
-                  document.getElementById("qr-toast-container");
-                if (toastContainer) {
-                  toastContainer.remove();
-                }
-              }, 5000);
-            });
-
-          // Log the result sent to the API
-          console.log("Full result sent to API:", decodedResult);
-
-          // // STOPPING THE SCANNER HAS BEEN REMOVED TO KEEP THE CAMERA ON
-          // html5QrCode
-          //   .stop()
-          //   .catch((err) => console.error("Error stopping scanner:", err));
-          // startScannerBtn.disabled = false;
-          // stopScannerBtn.disabled = true;
-
-          // You might want to do something with the decoded result,
-          // such as automatically signing in/out a student
-          console.log("Full result:", decodedResult);
-        },
-        (errorMessage) => {
-          // Only log severe errors, ignore normal camera processing messages
-          if (errorMessage.includes("Failed to access")) {
-            console.warn("Camera access error:", errorMessage);
-          }
-        }
+        { fps: 10, qrbox: { width: 250, height: 250 } },
+        handleQRCodeScan,
+        () => {} // Ignore verbose logs
       )
       .then(() => {
-        console.log("QR scanning started");
         startScannerBtn.disabled = true;
         stopScannerBtn.disabled = false;
         scanResult.innerHTML = `
-            <div class="text-center">
-                <div class="text-teal-light font-medium mb-1">Scanning for: ${selectedEventName}</div>
-                <span class="text-gray-500">Camera active. Scan a QR code...</span>
-            </div>
+          <div class="text-center">
+            <div class="text-teal-light font-medium mb-1">Scanning for: ${selectedEventName}</div>
+            <span class="text-gray-500">Camera active. Scan a QR code...</span>
+          </div>
         `;
+        saveActiveScannerState(true);
       })
       .catch((err) => {
-        console.error("QR start error:", err);
-
+        console.error("Error starting scanner:", err);
         // Provide more user-friendly error messages
         let errorMsg = `Unable to start scanner: ${err}`;
         if (err.toString().includes("NotFoundError")) {
           errorMsg = "No camera found. Please connect a camera and try again.";
         } else if (err.toString().includes("NotAllowedError")) {
-          errorMsg =
-            "Camera access denied. Please allow camera access and try again.";
+          errorMsg = "Camera access denied. Please allow camera access and try again.";
         } else if (err.toString().includes("NotReadableError")) {
-          errorMsg =
-            "Camera is in use by another application. Please close other apps using the camera.";
+          errorMsg = "Camera is in use by another application. Please close other apps using the camera.";
         }
         showScanMessage(errorMsg, true);
       });
-  });
+  }
 
-  // Override stop button to stop html5-qrcode scanning
-  stopScannerBtn.addEventListener("click", function () {
+  // Stop the scanner
+  function stopScanner() {
     if (!html5QrCode) {
       console.warn("QR scanner not initialized");
       return;
@@ -669,13 +514,38 @@ document.addEventListener("DOMContentLoaded", function () {
       .then(() => {
         startScannerBtn.disabled = false;
         stopScannerBtn.disabled = true;
-        scanResult.innerHTML =
-          '<span class="text-gray-500">Scanner stopped</span>';
+        scanResult.innerHTML = '<span class="text-gray-500">Scanner stopped</span>';
       })
       .catch((err) => {
-        console.error("QR stop error:", err);
-        showScanMessage("Unable to stop scanner", true);
+        console.error("Error stopping scanner:", err);
+        showScanMessage("Unable to stop scanner: " + err, true);
       });
+  }
+
+  // Initialize the scanner
+  function initScanner() {
+    try {
+      html5QrCode = new Html5Qrcode("reader");
+      console.log("QR scanner initialized successfully");
+
+      // Auto-start scanner if previously active
+      if (shouldAutoStartScanner()) {
+        console.log("Auto-starting scanner based on saved preference");
+        startScanner();
+      }
+    } catch (error) {
+      console.error("Error initializing QR scanner:", error);
+    }
+  }
+
+  // Start button event listener
+  startScannerBtn.addEventListener("click", function() {
+    startScanner();
+  });
+
+  // Stop button event listener
+  stopScannerBtn.addEventListener("click", function() {
+    stopScanner();
   });
 
   // Manual sign in/out buttons
@@ -870,429 +740,6 @@ document.addEventListener("DOMContentLoaded", function () {
         }
       }, 300); // Wait for the slide out animation
     }, 3000);
-  }
-
-  // Function to add entry to the recent activity table (for demo)
-  function addToRecentActivity(studentId, status) {
-    const activityContainer = document.querySelector(".divide-y.divide-dark-3");
-    if (!activityContainer) return;
-
-    // Sample names and years for demo
-    const names = [
-      "John Smith",
-      "Maria Garcia",
-      "Robert Johnson",
-      "Emily Wilson",
-      "Michael Brown",
-      "Sophia Martinez",
-    ];
-    const randomName = names[Math.floor(Math.random() * names.length)];
-    const years = ["1st Year", "2nd Year", "3rd Year", "4th Year"];
-    const randomYear = years[Math.floor(Math.random() * years.length)];
-
-    // Create the new activity entry
-    const newActivity = document.createElement("div");
-    newActivity.className = "grid grid-cols-5 gap-4 p-4";
-    newActivity.innerHTML = `
-            <div>${studentId}</div>
-            <div>${randomName}</div>
-            <div>${randomYear}</div>
-            <div><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-              status === "Sign In"
-                ? "bg-green-900 text-green-300"
-                : "bg-red-900 text-red-300"
-            }">${status}</span></div>
-            <div>${new Date().toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}</div>
-        `;
-
-    // Add to the top of the list
-    activityContainer.insertBefore(newActivity, activityContainer.firstChild);
-
-    // Highlight with animation
-    newActivity.classList.add("activity-highlight");
-    setTimeout(() => {
-      newActivity.classList.remove("activity-highlight");
-    }, 2000);
-  }
-
-  // Bulk Entry functionality
-  const bulkStudentIdInput = document.getElementById("bulkStudentId");
-  const bulkSubmitBtn = document.getElementById("bulkSubmitBtn");
-  const pendingEntriesContainer = document.getElementById("pendingEntries");
-  const clearBtn = document.getElementById("clearBtn");
-  const submitAllBtn = document.getElementById("submitAllBtn");
-  let pendingEntries = [];
-
-  bulkSubmitBtn.addEventListener("click", function () {
-    const studentId = bulkStudentIdInput.value.trim();
-    if (!studentId) {
-      showNotification("Please enter a student ID", "error");
-      return;
-    }
-
-    // Get selected event
-    const eventSelect = document.querySelector(".manual-content select");
-    const selectedEvent = eventSelect.options[eventSelect.selectedIndex].text;
-    if (eventSelect.selectedIndex === 0) {
-      showNotification("Please select an event", "error");
-      return;
-    }
-
-    // Get selected status
-    const statusRadios = document.querySelectorAll('input[name="bulk-status"]');
-    let selectedStatus;
-    statusRadios.forEach((radio) => {
-      if (radio.checked) {
-        selectedStatus = radio.nextElementSibling.textContent.trim();
-      }
-    });
-
-    const entry = {
-      id: Date.now(),
-      studentId,
-      event: selectedEvent,
-      status: selectedStatus,
-      timestamp: new Date(),
-    };
-
-    pendingEntries.push(entry);
-    updatePendingEntries();
-
-    bulkStudentIdInput.value = "";
-    bulkStudentIdInput.focus();
-
-    showNotification("Entry added to pending list", "success");
-  });
-
-  clearBtn.addEventListener("click", function () {
-    pendingEntries = [];
-    updatePendingEntries();
-    showNotification("All pending entries cleared", "success");
-  });
-
-  submitAllBtn.addEventListener("click", function () {
-    const count = pendingEntries.length;
-    pendingEntries.forEach((entry) => {
-      addActivityEntry(entry.studentId, entry.status);
-    });
-
-    pendingEntries = [];
-    updatePendingEntries();
-    showNotification(`${count} entries submitted successfully`, "success");
-  });
-
-  function updatePendingEntries() {
-    if (pendingEntries.length === 0) {
-      pendingEntriesContainer.innerHTML =
-        '<div class="text-gray-500">No pending entries</div>';
-      clearBtn.disabled = true;
-      submitAllBtn.disabled = true;
-    } else {
-      let html = "";
-      pendingEntries.forEach((entry) => {
-        const time = entry.timestamp.toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        });
-        html += `
-          <div class="flex justify-between items-center p-3 border-b border-dark-3">
-            <div>
-              <div class="font-medium text-light">${entry.studentId}</div>
-              <div class="text-sm text-gray-400">${entry.event} - ${entry.status} at ${time}</div>
-            </div>
-            <button class="remove-entry text-red-500 hover:text-red-400" data-id="${entry.id}">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
-              </svg>
-            </button>
-          </div>
-        `;
-      });
-      pendingEntriesContainer.innerHTML = html;
-      clearBtn.disabled = false;
-      submitAllBtn.disabled = false;
-
-      // Add event listeners to remove buttons
-      document.querySelectorAll(".remove-entry").forEach((button) => {
-        button.addEventListener("click", function () {
-          const id = parseInt(this.getAttribute("data-id"));
-          pendingEntries = pendingEntries.filter((entry) => entry.id !== id);
-          updatePendingEntries();
-          showNotification("Entry removed", "success");
-        });
-      });
-    }
-  }
-
-  // Initialize pending entries
-  updatePendingEntries();
-
-  // Add activity entry function
-  function addActivityEntry(studentId, status) {
-    const activityContainer = document.querySelector(
-      ".bg-dark-2.rounded-lg.overflow-hidden > div:last-child"
-    );
-    if (!activityContainer) return;
-
-    // Sample data for demo
-    const names = [
-      "John Smith",
-      "Maria Garcia",
-      "Robert Johnson",
-      "Emily Wilson",
-      "Michael Brown",
-      "Sophia Martinez",
-    ];
-    const randomName = names[Math.floor(Math.random() * names.length)];
-    const years = ["1st Year", "2nd Year", "3rd Year", "4th Year"];
-    const randomYear = years[Math.floor(Math.random() * years.length)];
-
-    const entryElement = document.createElement("div");
-    entryElement.className = "grid grid-cols-5 gap-4 p-4";
-    entryElement.innerHTML = `
-            <div>${studentId}</div>
-            <div>${randomName}</div>
-            <div>${randomYear}</div>
-            <div><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-              status === "Sign In"
-                ? "bg-green-900 text-green-300"
-                : "bg-red-900 text-red-300"
-            }">${status}</span></div>
-            <div>${new Date().toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}</div>
-        `;
-
-    activityContainer.insertBefore(entryElement, activityContainer.firstChild);
-
-    // Highlight animation
-    entryElement.classList.add("activity-highlight");
-    setTimeout(() => {
-      entryElement.classList.remove("activity-highlight");
-    }, 2000);
-  }
-
-  // Function to handle the QR code scanning
-  function handleQRCodeScan(decodedText) {
-    // Check if we're already processing a scan
-    if (isProcessing) {
-      console.log("Already processing a scan, ignoring this one");
-      return;
-    }
-
-    // Set processing flag
-    isProcessing = true;
-
-    // Show the decoded text in the scan result area
-    showScanMessage(decodedText);
-
-    // Send the scanned QR code to the backend API with event ID
-    fetch("../includes/api/attendance_handler.php", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body:
-        "qr_code=" +
-        encodeURIComponent(decodedText) +
-        "&event_id=" +
-        encodeURIComponent(selectedEventId),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        if (data.success) {
-          showSuccessAlert(data.message);
-          // Update the recent activity section
-          updateRecentActivity();
-        } else {
-          showErrorAlert("Error", data.message);
-        }
-      })
-      .catch((error) => {
-        console.error("Error:", error);
-        showErrorAlert("Error", "Failed to process QR code");
-      })
-      .finally(() => {
-        // Reset processing flag after a delay to prevent rapid successive scans
-        setTimeout(() => {
-          isProcessing = false;
-        }, 1500);
-      });
-  }
-
-  // Initialize the scanner
-  function initScanner() {
-    try {
-      html5QrCode = new Html5Qrcode("reader");
-      console.log("QR scanner initialized successfully");
-
-      processAutomaticAttendance();
-      // Auto-start scanner if previously active
-      if (shouldAutoStartScanner()) {
-        startScanner();
-      }
-    } catch (error) {
-      console.error("Error initializing QR scanner:", error);
-    }
-  }
-
-  // Start the scanner
-  function startScanner() {
-    if (!selectedEventId) {
-      showScanMessage("Please select an event first", true);
-      return;
-    }
-
-    html5QrCode
-      .start(
-        { facingMode: "environment" },
-        { fps: 10, qrbox: { width: 250, height: 250 } },
-        handleQRCodeScan,
-        () => {} // Ignore verbose logs
-      )
-      .then(() => {
-        startScannerBtn.disabled = true;
-        stopScannerBtn.disabled = false;
-        scanResult.innerHTML =
-          '<span class="text-gray-500">Camera active. Scan a QR code...</span>';
-        saveActiveScannerState(true);
-      })
-      .catch((err) => {
-        console.error("Error starting scanner:", err);
-        showScanMessage("Unable to start scanner: " + err, true);
-      });
-  }
-
-  async function processAutomaticAttendance() {
-    console.log("Checking for automatic attendance...");
-    try {
-      if (!selectedEventId) {
-        console.log("No event selected for automatic attendance");
-        return;
-      }
-
-      scanResult.innerHTML =
-        '<span class="text-gray-500">Processing automatic attendance...</span>';
-
-      const response = await fetch(
-        `../includes/api/check_event_times.php?event_id=${encodeURIComponent(
-          selectedEventId
-        )}`
-      );
-      const timeData = await response.json();
-
-      if (timeData.success && timeData.trigger_action) {
-        const response = await fetch(
-          `../includes/api/auto_attendance.php?event_id=${encodeURIComponent(
-            selectedEventId
-          )}`
-        );
-        const data = await response.json();
-
-        if (data.success) {
-          showSuccessAlert(
-            `Processed ${
-              Object.keys(data.results).length
-            } students automatically`
-          );
-
-          let resultHtml = '<div class="text-left">';
-          resultHtml +=
-            '<div class="text-teal-light font-medium mb-2">Automatic Attendance Results:</div>';
-
-          Object.entries(data.results).forEach(([studentId, result]) => {
-            const statusClass = result.success
-              ? "text-green-400"
-              : "text-red-400";
-            const icon = result.success ? "✓" : "✗";
-            resultHtml += `<div class="text-sm ${statusClass}">${icon} ${studentId}: ${result.message}</div>`;
-          });
-
-          resultHtml += "</div>";
-          scanResult.innerHTML = resultHtml;
-
-          // Update recent activity
-          updateRecentActivity();
-        } else {
-          showErrorAlert("Error", data.message);
-        }
-      } else {
-        scanResult.innerHTML =
-          '<span class="text-gray-500">Not in auto attendance time window</span>';
-      }
-    } catch (error) {
-      console.error("Error processing automatic attendance:", error);
-      showErrorAlert("Error", "Failed to process automatic attendance");
-    }
-  }
-
-  // Stop the scanner
-  function stopScanner() {
-    if (!html5QrCode) return;
-
-    html5QrCode
-      .stop()
-      .then(() => {
-        startScannerBtn.disabled = false;
-        stopScannerBtn.disabled = true;
-        scanResult.innerHTML =
-          '<span class="text-gray-500">Scanner stopped</span>';
-        saveActiveScannerState(false);
-      })
-      .catch((err) => {
-        console.error("Error stopping scanner:", err);
-        showScanMessage("Unable to stop scanner", true);
-      });
-  }
-
-  // Start the scanner
-  function startScanner() {
-    if (!selectedEventId) {
-      showScanMessage("Please select an event first", true);
-      return;
-    }
-
-    html5QrCode
-      .start(
-        { facingMode: "environment" },
-        { fps: 10, qrbox: { width: 250, height: 250 } },
-        handleQRCodeScan,
-        () => {} // Ignore verbose logs
-      )
-      .then(() => {
-        startScannerBtn.disabled = true;
-        stopScannerBtn.disabled = false;
-        scanResult.innerHTML =
-          '<span class="text-gray-500">Camera active. Scan a QR code...</span>';
-        saveActiveScannerState(true);
-      })
-      .catch((err) => {
-        console.error("Error starting scanner:", err);
-        showScanMessage("Unable to start scanner: " + err, true);
-      });
-  }
-
-  // Stop the scanner
-  function stopScanner() {
-    if (!html5QrCode) return;
-
-    html5QrCode
-      .stop()
-      .then(() => {
-        startScannerBtn.disabled = false;
-        stopScannerBtn.disabled = true;
-        scanResult.innerHTML =
-          '<span class="text-gray-500">Scanner stopped</span>';
-        saveActiveScannerState(false);
-      })
-      .catch((err) => {
-        console.error("Error stopping scanner:", err);
-        showScanMessage("Unable to stop scanner", true);
-      });
   }
 
   // Initialize the scanner when the page loads
