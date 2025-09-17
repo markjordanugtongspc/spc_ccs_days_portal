@@ -32,18 +32,51 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  // SweetAlert2 custom functions
+  // SweetAlert2 custom functions with dark theme
   const Toast = Swal.mixin({
     toast: true,
     position: "top-end",
     showConfirmButton: false,
     timer: 3000,
     timerProgressBar: true,
+    background: '#1a1a1a', // dark-2 equivalent
+    color: '#ffffff', // light text
     didOpen: (toast) => {
       toast.addEventListener("mouseenter", Swal.stopTimer);
       toast.addEventListener("mouseleave", Swal.resumeTimer);
     },
+    customClass: {
+      popup: 'colored-toast',
+      timerProgressBar: 'timer-progress'
+    }
   });
+
+  // Add custom styles for SweetAlert2
+  const style = document.createElement('style');
+  style.textContent = `
+    .colored-toast {
+      border: 1px solid rgba(107, 114, 128, 0.1) !important;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+    }
+    .colored-toast.swal2-icon-success {
+      border-left: 4px solid rgb(13, 148, 136) !important;
+    }
+    .colored-toast.swal2-icon-error {
+      border-left: 4px solid rgb(239, 68, 68) !important;
+    }
+    .colored-toast .swal2-success {
+      border-color: rgb(13, 148, 136) !important;
+      color: rgb(13, 148, 136) !important;
+    }
+    .colored-toast .swal2-error {
+      border-color: rgb(239, 68, 68) !important;
+      color: rgb(239, 68, 68) !important;
+    }
+    .timer-progress {
+      background: rgb(13, 148, 136) !important;
+    }
+  `;
+  document.head.appendChild(style);
 
   function showSuccessAlert(message) {
     Toast.fire({
@@ -124,6 +157,7 @@ document.addEventListener("DOMContentLoaded", function () {
       icon: "error",
       title: title,
       text: message,
+      iconColor: 'rgb(239, 68, 68)', // Red color for error icon
     });
   }
 
