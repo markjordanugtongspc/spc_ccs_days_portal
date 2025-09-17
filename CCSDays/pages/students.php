@@ -112,7 +112,7 @@ if ($isPartial) {
         <div class="bg-dark-2 rounded-lg p-6 max-w-lg w-full mx-4">
             <div class="flex justify-between items-start mb-4">
                 <h2 class="text-xl font-semibold text-light">Student Details</h2>
-                <button class="close-modal text-gray-400 hover:text-light">
+                <button class="close-modal text-gray-400 hover:text-light cursor-pointer">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                     </svg>
@@ -198,6 +198,12 @@ if ($isPartial) {
 						<path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
 					</svg>
 					Settings
+				</a>
+				<a href="credits.php" class="sidebar-link">
+					<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 icon">
+						<path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
+					</svg>
+					Credits
 				</a>
             </div>
             <div class="user-info">
@@ -297,7 +303,7 @@ if ($isPartial) {
             <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity"></div>
             <div class="relative bg-dark-2 rounded-lg max-w-md w-full mx-4 overflow-hidden shadow-xl transform transition-all">
                 <div class="absolute top-0 right-0 pt-4 pr-4">
-                    <button type="button" class="close-modal bg-transparent rounded-md text-gray-400 hover:text-light">
+                    <button type="button" class="close-modal bg-transparent rounded-md text-gray-400 hover:text-light cursor-pointer">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
                         </svg>
@@ -330,12 +336,22 @@ if ($isPartial) {
                             </div>
 
                             <div>
-                                <label for="edit_college" class="block text-sm font-medium text-gray-400">Course</label>
+                                <label for="edit_college" class="block text-sm font-medium text-gray-400">College</label>
                                 <select id="edit_college" name="college" class="mt-1 bg-dark-1 border border-dark-3 text-light w-full rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-teal-light">
                                     <option value="CCS">CCS</option>
+                                    <option value="COE">COE</option>
+                                    <option value="CBAA">CBAA</option>
+                                    <option value="CON">CON</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label for="edit_course" class="block text-sm font-medium text-gray-400">Course</label>
+                                <select id="edit_course" name="course" class="mt-1 bg-dark-1 border border-dark-3 text-light w-full rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-teal-light">
                                     <option value="BSIT">BSIT</option>
                                     <option value="BSCS">BSCS</option>
                                     <option value="BSIS">BSIS</option>
+                                    <option value="ACT">ACT</option>
                                 </select>
                             </div>
 
@@ -454,7 +470,7 @@ if ($isPartial) {
                         id: student.Student_ID,
                         name: student.Name,
                         year: yearLabel,
-                        course: student.College || 'CCS',
+                        course: student.Course || student.College,
                         email: student.Email || (() => {
                             const nameParts = student.Name.toLowerCase().split(' ');
                             const firstName = nameParts[0];
@@ -748,7 +764,7 @@ if ($isPartial) {
                             <div class="flex gap-3 justify-center">
                                 <a href="${qrPath}" download title="Download QR"
                                    class="px-4 py-2 bg-teal-900 text-teal-light rounded-md hover:bg-teal-800 transition-colors">Download</a>
-                                <button class="px-4 py-2 bg-dark-3 text-light rounded-md hover:bg-dark-4 transition-colors close-modal">Close</button>
+                                <button class="px-4 py-2 bg-dark-3 text-light rounded-md hover:bg-dark-4 transition-colors close-modal cursor-pointer">Close</button>
                             </div>
                         </div>
                     `;
@@ -766,7 +782,7 @@ if ($isPartial) {
                                 </svg>
                             </div>
                             <div class="text-light mb-4">Failed to generate QR. Please try again.</div>
-                            <button class="px-4 py-2 bg-dark-3 text-light rounded-md hover:bg-dark-4 transition-colors close-modal">Close</button>
+                            <button class="px-4 py-2 bg-dark-3 text-light rounded-md hover:bg-dark-4 transition-colors close-modal cursor-pointer">Close</button>
                         </div>
                     `;
                     document.querySelectorAll('.close-modal').forEach(btn => {
@@ -810,15 +826,24 @@ if ($isPartial) {
                                 <option value="4">4th Year</option>
                             </select>
                         </div>
-                        <div>
-                            <label class="block text-sm text-gray-400 mb-1">Course*</label>
-                            <select id="newCourse" required class="w-full bg-dark-1 border border-dark-4 rounded-md px-3 py-2 text-light focus:outline-none focus:ring-1 focus:ring-teal-light">
-                                <option value="CCS">CCS</option>
-                                <option value="BSIT">BSIT</option>
-                                <option value="BSCS">BSCS</option>
-                                <option value="BSIS">BSIS</option>
-                            </select>
-                        </div>
+                            <div>
+                                <label class="block text-sm text-gray-400 mb-1">College*</label>
+                                <select id="newCollege" required class="w-full bg-dark-1 border border-dark-4 rounded-md px-3 py-2 text-light focus:outline-none focus:ring-1 focus:ring-teal-light">
+                                    <option value="CCS">CCS</option>
+                                    <option value="COE">COE</option>
+                                    <option value="CBAA">CBAA</option>
+                                    <option value="CON">CON</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm text-gray-400 mb-1">Course*</label>
+                                <select id="newCourse" required class="w-full bg-dark-1 border border-dark-4 rounded-md px-3 py-2 text-light focus:outline-none focus:ring-1 focus:ring-teal-light">
+                                    <option value="BSIT">BSIT</option>
+                                    <option value="BSCS">BSCS</option>
+                                    <option value="BSIS">BSIS</option>
+                                    <option value="ACT">ACT</option>
+                                </select>
+                            </div>
                         <div>
                             <label class="block text-sm text-gray-400 mb-1">Gender*</label>
                             <select id="newGender" required class="w-full bg-dark-1 border border-dark-4 rounded-md px-3 py-2 text-light focus:outline-none focus:ring-1 focus:ring-teal-light">
@@ -849,7 +874,7 @@ if ($isPartial) {
                     </div>
                     
                     <div class="flex space-x-3">
-                        <button type="button" class="flex-1 py-2 px-4 bg-dark-3 text-light rounded-md hover:bg-dark-4 transition-colors close-modal font-bold">
+                        <button type="button" class="flex-1 py-2 px-4 bg-dark-3 text-light rounded-md hover:bg-dark-4 transition-colors close-modal font-bold cursor-pointer">
                             Cancel
                         </button>
                         <button type="button" id="saveNewStudentBtn" class="flex-1 py-2 px-4 bg-teal-900 text-teal-light rounded-md hover:bg-teal-800 transition-colors font-bold">
@@ -870,6 +895,7 @@ if ($isPartial) {
                         const newName = document.getElementById('newName').value.trim();
                         const newId = document.getElementById('newId').value.trim();
                         const newYear = document.getElementById('newYear').value;
+                        const newCollege = document.getElementById('newCollege').value;
                         const newCourse = document.getElementById('newCourse').value;
                         const newGender = document.getElementById('newGender').value;
                         const newEmail = document.getElementById('newEmail').value.trim();
@@ -889,7 +915,8 @@ if ($isPartial) {
                         formData.append('name', newName);
                         formData.append('student_id', newId);
                         formData.append('year', newYear);
-                        formData.append('college', newCourse);
+                        formData.append('college', newCollege);
+                        formData.append('course', newCourse);
                         formData.append('gender', newGender);
                         formData.append('email', newEmail);
                         formData.append('phone', newPhone);
@@ -916,7 +943,7 @@ if ($isPartial) {
                                     <p class="text-gray-400">The new student has been added to the system.</p>
                                 </div>
                                 
-                                <button class="w-full py-2 px-4 bg-teal-900 text-teal-light rounded-md hover:bg-teal-800 transition-colors close-modal font-bold">
+                                <button class="w-full py-2 px-4 bg-teal-900 text-teal-light rounded-md hover:bg-teal-800 transition-colors close-modal font-bold cursor-pointer">
                                     Close
                                 </button>
                             `;
@@ -988,12 +1015,21 @@ if ($isPartial) {
                                 </select>
                             </div>
                             <div>
+                                <label class="block text-sm text-gray-400 mb-1">College*</label>
+                                <select id="editCollege" required class="w-full bg-dark-1 border border-dark-4 rounded-md px-3 py-2 text-light focus:outline-none focus:ring-1 focus:ring-teal-light">
+                                                <option value="CCS" ${student.college === 'CCS' ? 'selected' : ''}>CCS</option>
+                                                <option value="COE" ${student.college === 'COE' ? 'selected' : ''}>COE</option>
+                                                <option value="CBAA" ${student.college === 'CBAA' ? 'selected' : ''}>CBAA</option>
+                                                <option value="CON" ${student.college === 'CON' ? 'selected' : ''}>CON</option>
+                                </select>
+                            </div>
+                            <div>
                                 <label class="block text-sm text-gray-400 mb-1">Course*</label>
                                 <select id="editCourse" required class="w-full bg-dark-1 border border-dark-4 rounded-md px-3 py-2 text-light focus:outline-none focus:ring-1 focus:ring-teal-light">
-                                    <option value="CCS" ${student.course === 'CCS' ? 'selected' : ''}>CCS</option>
-                                    <option value="BSIT" ${student.course === 'BSIT' ? 'selected' : ''}>BSIT</option>
-                                    <option value="BSCS" ${student.course === 'BSCS' ? 'selected' : ''}>BSCS</option>
-                                    <option value="BSIS" ${student.course === 'BSIS' ? 'selected' : ''}>BSIS</option>
+                                                <option value="BSIT" ${student.course === 'BSIT' ? 'selected' : ''}>BSIT</option>
+                                                <option value="BSCS" ${student.course === 'BSCS' ? 'selected' : ''}>BSCS</option>
+                                                <option value="BSIS" ${student.course === 'BSIS' ? 'selected' : ''}>BSIS</option>
+                                                <option value="ACT" ${student.course === 'ACT' ? 'selected' : ''}>ACT</option>
                                 </select>
                             </div>
                             <div>
@@ -1046,6 +1082,7 @@ if ($isPartial) {
                             // Get values from form
                             const editName = document.getElementById('editName').value.trim();
                             const editYear = document.getElementById('editYear').value;
+                            const editCollege = document.getElementById('editCollege').value;
                             const editCourse = document.getElementById('editCourse').value;
                             const editGender = document.getElementById('editGender').value;
                             const editEmail = document.getElementById('editEmail').value.trim();
@@ -1065,7 +1102,8 @@ if ($isPartial) {
                             formData.append('student_id', student.id);
                             formData.append('name', editName);
                             formData.append('year', editYear);
-                            formData.append('college', editCourse);
+                            formData.append('college', editCollege);
+                            formData.append('course', editCourse);
                             formData.append('gender', editGender);
                             formData.append('email', editEmail);
                             formData.append('phone', editPhone);
@@ -1084,7 +1122,7 @@ if ($isPartial) {
                                 <p class="text-gray-400">The student information has been updated.</p>
                             </div>
                             
-                            <button class="w-full py-2 px-4 bg-teal-900 text-teal-light rounded-md hover:bg-teal-800 transition-colors close-modal font-bold">
+                            <button class="w-full py-2 px-4 bg-teal-900 text-teal-light rounded-md hover:bg-teal-800 transition-colors close-modal font-bold cursor-pointer">
                                 Close
                             </button>
                         `;
@@ -1157,7 +1195,7 @@ if ($isPartial) {
                     </div>
                     
                     <div class="flex space-x-3">
-                        <button class="flex-1 py-2 px-4 bg-dark-3 text-light rounded-md hover:bg-dark-4 transition-colors close-modal font-bold">
+                        <button class="flex-1 py-2 px-4 bg-dark-3 text-light rounded-md hover:bg-dark-4 transition-colors close-modal font-bold cursor-pointer">
                             CANCEL
                         </button>
                         <button id="confirmDeleteBtn" class="flex-1 py-2 px-4 bg-red-900 text-red-300 rounded-md hover:bg-red-800 transition-colors font-bold">
@@ -1190,7 +1228,7 @@ if ($isPartial) {
                                 <p class="text-gray-400">The student has been removed from the system.</p>
                             </div>
                             
-                            <button class="w-full py-2 px-4 bg-teal-900 text-teal-light rounded-md hover:bg-teal-800 transition-colors close-modal font-bold">
+                            <button class="w-full py-2 px-4 bg-teal-900 text-teal-light rounded-md hover:bg-teal-800 transition-colors close-modal font-bold cursor-pointer">
                                 Close
                             </button>
                         `;

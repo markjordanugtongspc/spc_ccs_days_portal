@@ -101,10 +101,11 @@ function addStudent($conn, &$response) {
     $studentId = isset($_POST['student_id']) ? $_POST['student_id'] : '';
     $year = isset($_POST['year']) ? $_POST['year'] : '';
     $college = isset($_POST['college']) ? $_POST['college'] : '';
+    $course = isset($_POST['course']) ? $_POST['course'] : '';
     $gender = isset($_POST['gender']) ? $_POST['gender'] : '';
-    $email = isset($_POST['email']) ? $_POST['email'] : '';
-    $phone = isset($_POST['phone']) ? $_POST['phone'] : '';
-    $status = isset($_POST['status']) ? $_POST['status'] : 'Active';
+    // $email = isset($_POST['email']) ? $_POST['email'] : '';
+    // $phone = isset($_POST['phone']) ? $_POST['phone'] : '';
+    // $status = isset($_POST['status']) ? $_POST['status'] : 'Active';
     $attendance = isset($_POST['attendance']) ? (int)$_POST['attendance'] : 0;
     
     // Validate required fields
@@ -125,8 +126,9 @@ function addStudent($conn, &$response) {
     }
     
     // Prepare and execute the insert query
-    $stmt = $conn->prepare("INSERT INTO students (Student_ID, Name, Year, College, Gender, Email, Phone, Status, Attendance) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-    $stmt->bind_param("ssssssssi", $studentId, $name, $year, $college, $gender, $email, $phone, $status, $attendance);
+    // $stmt = $conn->prepare("INSERT INTO students (Student_ID, Name, Year, College, Course, Gender, Email, Phone, Status, Attendance) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt = $conn->prepare("INSERT INTO students (Student_ID, Name, Year, College, Course, Gender, Attendance) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("sssssssssi", $studentId, $name, $year, $college, $course, $gender, $attendance);
     
     if ($stmt->execute()) {
         // Student added successfully
@@ -150,10 +152,11 @@ function updateStudent($conn, &$response) {
     $name = isset($_POST['name']) ? $_POST['name'] : '';
     $year = isset($_POST['year']) ? $_POST['year'] : '';
     $college = isset($_POST['college']) ? $_POST['college'] : '';
+    $course = isset($_POST['course']) ? $_POST['course'] : '';
     $gender = isset($_POST['gender']) ? $_POST['gender'] : '';
-    $email = isset($_POST['email']) ? $_POST['email'] : '';
-    $phone = isset($_POST['phone']) ? $_POST['phone'] : '';
-    $status = isset($_POST['status']) ? $_POST['status'] : '';
+    // $email = isset($_POST['email']) ? $_POST['email'] : '';
+    // $phone = isset($_POST['phone']) ? $_POST['phone'] : '';
+    // $status = isset($_POST['status']) ? $_POST['status'] : '';
     $attendance = isset($_POST['attendance']) ? (int)$_POST['attendance'] : 0;
     
     // Validate required fields
@@ -172,10 +175,10 @@ function updateStudent($conn, &$response) {
         $response['message'] = 'Student not found.';
         return;
     }
-    
+
     // Prepare and execute the update query
-    $stmt = $conn->prepare("UPDATE students SET Name = ?, Year = ?, College = ?, Gender = ?, Email = ?, Phone = ?, Status = ?, Attendance = ? WHERE Student_ID = ?");
-    $stmt->bind_param("sssssssss", $name, $year, $college, $gender, $email, $phone, $status, $attendance, $studentId);
+    $stmt = $conn->prepare("UPDATE students SET Name = ?, Year = ?, College = ?, Course = ?, Gender = ?, Attendance = ? WHERE Student_ID = ?");
+    $stmt->bind_param("ssssssssss", $name, $year, $college, $course, $gender, $attendance, $studentId);
     
     if ($stmt->execute()) {
         // Student updated successfully

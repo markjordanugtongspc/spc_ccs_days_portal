@@ -605,7 +605,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                     
                     // Fetch students from API
-                    fetch(`../includes/api/fetch_students.php?page=${currentPage}&search=${encodeURIComponent(searchTerm)}&limit=8`)
+                    fetch(`../includes/api/fetch_students.php?page=${currentPage}&search=${encodeURIComponent(searchTerm)}&limit=16`)
                         .then(response => response.json())
                         .then(data => {
                             if (reset) {
@@ -665,18 +665,18 @@ document.addEventListener('DOMContentLoaded', function () {
                                         </div>
                                     </div>
                                     <div class="mt-3 flex-grow">
-                                        <p class="text-gray-300"><span class="text-gray-400">Course:</span> ${student.College || 'CCS'}</p>
+                                        <p class="text-gray-300"><span class="text-gray-400">Course:</span> ${student.Course}</p>
                                         <p class="text-gray-300"><span class="text-gray-400">Attendance:</span> <span class="${attendanceClass}">${attendance} events</span></p>
                                     </div>
                                     <div class="mt-4 flex justify-between space-x-4">
-                                        <button class="flex-1 px-3 py-2 rounded-md bg-dark-3 hover:bg-dark-4 text-teal-light hover:text-teal transition-all duration-200 flex items-center justify-center group view-student" data-id="${student.Student_ID}">
+                                        <button class="cursor-pointer flex-1 px-3 py-2 rounded-md bg-dark-3 hover:bg-dark-4 text-teal-light hover:text-teal transition-all duration-200 flex items-center justify-center group view-student" data-id="${student.Student_ID}">
                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-1.5 group-hover:scale-110 transition-transform">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                             </svg>
                                             Details
                                         </button>
-                                        <button class="flex-1 px-3 py-2 rounded-md bg-dark-3 hover:bg-dark-4 text-teal-light hover:text-teal transition-all duration-200 flex items-center justify-center group generate-qr" data-id="${student.Student_ID}">
+                                        <button class="cursor-pointer flex-1 px-3 py-2 rounded-md bg-dark-3 hover:bg-dark-4 text-teal-light hover:text-teal transition-all duration-200 flex items-center justify-center group generate-qr" data-id="${student.Student_ID}">
                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-1.5 group-hover:scale-110 transition-transform">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                             </svg>
@@ -769,7 +769,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                     </div>
                                     <div>
                                         <p class="text-gray-400 mb-1">Course</p>
-                                        <p class="text-light">${student.College || 'CCS'}</p>
+                                        <p class="text-light">${student.Course}</p>
                                     </div>
                                     <div>
                                         <p class="text-gray-400 mb-1">Gender</p>
@@ -800,39 +800,68 @@ document.addEventListener('DOMContentLoaded', function () {
                 async function generateStudentQR(studentId) {
                     const modal = document.getElementById('studentModal');
                     const modalContent = document.getElementById('studentModalContent');
+                    
+                    // Show loading state first
+                    modalContent.innerHTML = `
+                        <div class="text-center p-4">
+                            <div class="inline-flex items-center justify-center h-16 w-16 rounded-full bg-teal-900/20 mb-4">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-8 h-8 text-teal-light animate-spin">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                                </svg>
+                            </div>
+                            <div class="text-light">Generating QR code...</div>
+                        </div>
+                    `;
+                    
+                    modal.classList.remove('hidden');
+                    
                     try {
-                        const res = await fetch(`../includes/api/qr_generator.php?student_id=${encodeURIComponent(studentId)}&size=64x64`);
+                        // Use the same API endpoint and parameters as in students.js
+                        const res = await fetch(`../includes/api/qr_generator.php?student_id=${encodeURIComponent(studentId)}&size=300x300&ecc=L&qzone=4`);
                         const data = await res.json();
+                        
                         if (!data.success) throw new Error(data.message || 'QR generation failed.');
-                        const qrUrl = data.qr_url;
+                        
+                        // Use the cached file path instead of URL
+                        const qrPath = `../${data.qr_path}`;
+                        
                         modalContent.innerHTML = `
-                            <div class="flex justify-between items-center mb-4">
-                                <h3 class="text-xl font-medium text-light">Generate QR Code</h3>
-                            </div>
-                            <div class="mb-4">
-                                <a href="${qrUrl}" target="_blank" class="flex justify-center items-center bg-teal-900 text-teal-light px-4 py-2 rounded-md hover:bg-teal-800 transition-all duration-300">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-2">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
-                                    </svg>
-                                    Open in New Tab
-                                </a>
-                            </div>
-                            <div class="flex justify-center mb-6">
-                                <img src="${qrUrl}" alt="QR Code" class="h-16 w-16 shadow-md rounded" />
-                            </div>
-                            <div class="flex space-x-3">
-                                <button id="cancelQrBtn" class="flex-1 py-2 px-4 bg-dark-3 text-light rounded-md hover:bg-dark-4 transition-all duration-300">Cancel</button>
-                                <button id="saveQrBtn" class="flex-1 py-2 px-4 bg-teal-900 text-teal-light rounded-md hover:bg-teal-800 transition-all duration-300">Save</button>
+                            <div class="text-center">
+                                <h3 class="text-xl font-medium text-light mb-4">Student QR Code</h3>
+                                <div class="flex justify-center mb-4">
+                                    <img src="${qrPath}" alt="QR Code" class="w-64 h-64 bg-white p-2 rounded" />
+                                </div>
+                                <div class="flex gap-3 justify-center">
+                                    <a href="${qrPath}" download title="Download QR"
+                                       class="px-4 py-2 bg-teal-900 text-teal-light rounded-md hover:bg-teal-800 transition-colors">Download</a>
+                                    <button class="px-4 py-2 bg-dark-3 text-light rounded-md hover:bg-dark-4 transition-colors close-qr-modal cursor-pointer">Close</button>
+                                </div>
                             </div>
                         `;
                         
-                        // Add event listeners for buttons
-                        document.getElementById('cancelQrBtn').addEventListener('click', () => modal.classList.add('hidden'));
-                        document.getElementById('saveQrBtn').addEventListener('click', () => modal.classList.add('hidden'));
-                        modal.classList.remove('hidden');
+                        // Add event listener to close button
+                        document.querySelectorAll('.close-qr-modal').forEach(btn => {
+                            btn.addEventListener('click', () => modal.classList.add('hidden'));
+                        });
+                        
                     } catch (error) {
                         console.error('Error generating QR:', error);
-                        alert(error.message);
+                        
+                        modalContent.innerHTML = `
+                            <div class="text-center p-4">
+                                <div class="inline-flex items-center justify-center h-16 w-16 rounded-full bg-red-900/20 mb-4">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8 text-red-500 cursor-pointer">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                    </svg>
+                                </div>
+                                <div class="text-light mb-4">Failed to generate QR. Please try again.</div>
+                                <button class="px-4 py-2 bg-dark-3 text-light rounded-md hover:bg-dark-4 transition-colors close-qr-modal">Close</button>
+                            </div>
+                        `;
+                        
+                        document.querySelectorAll('.close-qr-modal').forEach(btn => {
+                            btn.addEventListener('click', () => modal.classList.add('hidden'));
+                        });
                     }
                 }
                 
