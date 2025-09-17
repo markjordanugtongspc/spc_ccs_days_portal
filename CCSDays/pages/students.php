@@ -16,9 +16,14 @@ if ($_SESSION['user_role'] !== 'admin') {
 // Include database connection
 require_once '../includes/config.php';
 
-// Fetch all students from the database
+// Fetch all students from the database with attendance count
 $students = [];
-$query = "SELECT * FROM students ORDER BY Student_ID DESC";
+$query = "SELECT s.*, 
+          COUNT(a.Attendance_ID) as attendance_count
+          FROM students s 
+          LEFT JOIN attendance a ON s.Student_ID = a.Student_ID 
+          GROUP BY s.Student_ID 
+          ORDER BY s.Student_ID DESC";
 $result = $conn->query($query);
 
 if ($result && $result->num_rows > 0) {
@@ -29,7 +34,13 @@ if ($result && $result->num_rows > 0) {
 
 // Fetch first year students
 $firstYearStudents = [];
-$firstYearQuery = "SELECT * FROM students WHERE Year = '1' ORDER BY Student_ID DESC";
+$firstYearQuery = "SELECT s.*, 
+                   COUNT(a.Attendance_ID) as attendance_count
+                   FROM students s 
+                   LEFT JOIN attendance a ON s.Student_ID = a.Student_ID 
+                   WHERE s.Year = '1' 
+                   GROUP BY s.Student_ID 
+                   ORDER BY s.Student_ID DESC";
 $firstYearResult = $conn->query($firstYearQuery);
 
 if ($firstYearResult && $firstYearResult->num_rows > 0) {
@@ -40,7 +51,13 @@ if ($firstYearResult && $firstYearResult->num_rows > 0) {
 
 // Fetch second year students
 $secondYearStudents = [];
-$secondYearQuery = "SELECT * FROM students WHERE Year = '2' ORDER BY Student_ID DESC";
+$secondYearQuery = "SELECT s.*, 
+                   COUNT(a.Attendance_ID) as attendance_count
+                   FROM students s 
+                   LEFT JOIN attendance a ON s.Student_ID = a.Student_ID 
+                   WHERE s.Year = '2' 
+                   GROUP BY s.Student_ID 
+                   ORDER BY s.Student_ID DESC";
 $secondYearResult = $conn->query($secondYearQuery);
 
 if ($secondYearResult && $secondYearResult->num_rows > 0) {
@@ -51,7 +68,13 @@ if ($secondYearResult && $secondYearResult->num_rows > 0) {
 
 // Fetch third year students
 $thirdYearStudents = [];
-$thirdYearQuery = "SELECT * FROM students WHERE Year = '3' ORDER BY Student_ID DESC";
+$thirdYearQuery = "SELECT s.*, 
+                   COUNT(a.Attendance_ID) as attendance_count
+                   FROM students s 
+                   LEFT JOIN attendance a ON s.Student_ID = a.Student_ID 
+                   WHERE s.Year = '3' 
+                   GROUP BY s.Student_ID 
+                   ORDER BY s.Student_ID DESC";
 $thirdYearResult = $conn->query($thirdYearQuery);
 
 if ($thirdYearResult && $thirdYearResult->num_rows > 0) {
@@ -62,7 +85,13 @@ if ($thirdYearResult && $thirdYearResult->num_rows > 0) {
 
 // Fetch fourth year students
 $fourthYearStudents = [];
-$fourthYearQuery = "SELECT * FROM students WHERE Year = '4' ORDER BY Student_ID DESC";
+$fourthYearQuery = "SELECT s.*, 
+                    COUNT(a.Attendance_ID) as attendance_count
+                    FROM students s 
+                    LEFT JOIN attendance a ON s.Student_ID = a.Student_ID 
+                    WHERE s.Year = '4' 
+                    GROUP BY s.Student_ID 
+                    ORDER BY s.Student_ID DESC";
 $fourthYearResult = $conn->query($fourthYearQuery);
 
 if ($fourthYearResult && $fourthYearResult->num_rows > 0) {
@@ -481,7 +510,7 @@ if ($isPartial) {
                         })(),
                         phone: student.Phone || '+63 N/A',
                         status: student.Status || 'Active',
-                        attendance: parseInt(student.Attendance) || 0,
+                        attendance: parseInt(student.attendance_count) || 0,
                         gender: student.Gender
                     };
                 });
