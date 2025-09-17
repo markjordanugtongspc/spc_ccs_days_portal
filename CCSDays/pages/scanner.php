@@ -598,50 +598,47 @@ try {
 			const status = sessionStorage.getItem('lastPersonStatus');
 			if (!id || !status) return;
 
-			fetch(`../includes/api/fetch_student_details.php?id=${encodeURIComponent(id)}`)
-				.then(r => r.json())
-				.then(student => {
-					if (!student || student.error) return;
-					const statusClass = status === 'Sign Out' ? 'bg-red-900 text-red-300' : 'bg-green-900 text-green-300';
-					const parts = (student.Name || '').split(' ');
-					const initials = (parts[0]?.charAt(0) || '') + (parts.length > 1 ? parts[parts.length - 1].charAt(0) : '');
-					const timeStr = new Date().toLocaleTimeString([], {
-						hour: '2-digit',
-						minute: '2-digit'
-					});
-					container.classList.remove('hidden');
-					container.innerHTML = `
-                        <div class="flex items-start justify-between mb-4">
-                            <div class="flex items-start">
-                                <div class=\"h-12 w-12 rounded-full bg-teal-900/30 flex items-center justify-center text-teal-light font-semibold\">${initials}</div>
-                                <div class=\"ml-4\">
-                                    <div class=\"text-lg font-medium text-light\">${student.Name || 'Unknown'}</div>
-                                    <div class=\"text-gray-400 text-sm\">${student.Student_ID || id}</div>
-                                </div>
-                            </div>
-                            <span class=\"inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusClass}\">${status}</span>
-                        </div>
-                        <div class=\"grid grid-cols-2 gap-4 text-sm\">
-                            <div>
-                                <div class=\"text-gray-400\">Course</div>
-                                <div class=\"text-light\">${student.College || 'CCS'}</div>
-                            </div>
-                            <div>
-                                <div class=\"text-gray-400\">Year</div>
-                                <div class=\"text-light\">${student.Year ? student.Year + ' Year' : 'N/A'}</div>
-                            </div>
-                            <div>
-                                <div class=\"text-gray-400\">Gender</div>
-                                <div class=\"text-light\">${student.Gender === 'M' ? 'Male' : student.Gender === 'F' ? 'Female' : 'N/A'}</div>
-                            </div>
-                            <div>
-                                <div class=\"text-gray-400\">Time</div>
-                                <div class=\"text-light\">${timeStr}</div>
-                            </div>
-                        </div>
-                    `;
-				})
-				.catch(() => {});
+		    fetch(`../includes/api/fetch_student_details.php?id=${encodeURIComponent(id)}`)
+		        .then(r => r.json())
+		        .then(student => {
+		            if (!student || student.error) return;
+		            const statusClass = status === 'Sign Out' ? 'bg-red-900 text-red-300' : 'bg-green-900 text-green-300';
+		            const parts = (student.Name || '').split(' ');
+		            const initials = (parts[0]?.charAt(0) || '') + (parts.length > 1 ? parts[parts.length - 1].charAt(0) : '');
+		            const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+		            container.classList.remove('hidden');
+		            container.innerHTML = `
+		                <div class="flex items-start justify-between mb-4">
+		                    <div class="flex items-start">
+		                        <div class=\"h-12 w-12 rounded-full bg-teal-900/30 flex items-center justify-center text-teal-light font-semibold\">${initials}</div>
+		                        <div class=\"ml-4\">
+		                            <div class=\"text-lg font-medium text-light\">${student.Name || 'Unknown'}</div>
+		                            <div class=\"text-gray-400 text-sm\">${student.Student_ID || id}</div>
+		                        </div>
+		                    </div>
+		                    <span class=\"inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusClass}\">${status}</span>
+		                </div>
+		                <div class=\"grid grid-cols-2 gap-4 text-sm\">
+		                    <div>
+		                        <div class=\"text-gray-400\">Course</div>
+		                        <div class=\"text-light\">${student.College || 'CCS'}</div>
+		                    </div>
+		                    <div>
+		                        <div class=\"text-gray-400\">Year</div>
+		                        <div class=\"text-light\">${student.Year ? student.Year + ' Year' : 'N/A'}</div>
+		                    </div>
+		                    <div>
+		                        <div class=\"text-gray-400\">Gender</div>
+		                        <div class=\"text-light\">${student.Gender === 'M' ? 'Male' : student.Gender === 'F' ? 'Female' : 'N/A'}</div>
+		                    </div>
+		                    <div>
+		                        <div class=\"text-gray-400\">Time</div>
+		                        <div class=\"text-light\">${timeStr}</div>
+		                    </div>
+		                </div>
+		            `;
+		        })
+		        .catch(() => {});
 		})();
 	</script>
 </body>
