@@ -23,12 +23,12 @@ try {
     exit;
   }
 
-  // List of students to process automatically
+  // List of students to process automatically - keep this consistent across all files
   $autoSignStudents = ['2022-00752', '2022-00769', '2021-01066', '2022-00008', '2022-01308'];
 
   $results = [];
   foreach ($autoSignStudents as $studentId) {
-    $result = processStudentAttendance($studentId, $eventId, $pdo);
+    $result = processStudentAttendance($studentId, $eventId, $pdo, true); // true = force auto attendance
     $results[$studentId] = $result;
   }
 
@@ -43,7 +43,7 @@ try {
 }
 
 // Include the processStudentAttendance function from above
-function processStudentAttendance($studentId, $eventId, $pdo)
+function processStudentAttendance($studentId, $eventId, $pdo, $isForceAuto = false)
 {
   try {
     // Validate student exists
@@ -85,7 +85,8 @@ function processStudentAttendance($studentId, $eventId, $pdo)
     $existingAttendance = $stmtCheckSignIn->fetch(PDO::FETCH_ASSOC);
 
     // Logic for automatic attendance
-    if ($isSignInTime) {
+    // If isForceAuto is true, we'll process regardless of time windows
+    if ($isSignInTime || $isForceAuto) {
       // Check if already signed in for this event today
       if ($existingAttendance) {
         if ($existingAttendance['Sign_Out_Time']) {
@@ -96,13 +97,13 @@ function processStudentAttendance($studentId, $eventId, $pdo)
           return ['success' => false, 'message' => "Student $studentId is already signed in for this event."];
         }
       } else {
-        // Sign in new entry
+        // Sign in new entry - always use the format studentId-timestamp for auto/QR entries
         $uniqueQrCode = $studentId . '-' . time();
         $stmtInsert = $pdo->prepare("INSERT INTO attendance (Student_ID, QR_Code, Sign_In_Time, Event_ID) VALUES (?, ?, ?, ?)");
         $stmtInsert->execute([$studentId, $uniqueQrCode, $manilaNow->format('Y-m-d H:i:s'), $eventId]);
         return ['success' => true, 'action' => 'signin', 'message' => "Student $studentId signed in automatically"];
       }
-    } else if ($isSignOutTime) {
+    } else if ($isSignOutTime || $isForceAuto) {
       // Check if signed in but not signed out
       if ($existingAttendance && !$existingAttendance['Sign_Out_Time']) {
         // Sign out existing entry
@@ -110,6 +111,23 @@ function processStudentAttendance($studentId, $eventId, $pdo)
         $stmtUpdate->execute([$manilaNow->format('Y-m-d H:i:s'), $existingAttendance['Attendance_ID']]);
         return ['success' => true, 'action' => 'signout', 'message' => "Student $studentId signed out automatically"];
       } else if (!$existingAttendance) {
+        // If forcing auto attendance and no sign-in exists, create one and then sign out
+        if ($isForceAuto) {
+          $uniqueQrCode = $studentId . '-' . time();
+          $stmtInsert = $pdo->prepare("INSERT INTO attendance (Student_ID, QR_Code, Sign_In_Time, Event_ID) VALUES (?, ?, ?, ?)");
+          $stmtInsert->execute([$studentId, $uniqueQrCode, $manilaNow->format('Y-m-d H:i:s'), $eventId]);
+          
+          // Get the ID of the newly inserted record
+          $newAttendanceId = $pdo->lastInsertId();
+          
+          // Sign it out immediately (5 seconds later)
+          $signOutTime = new DateTime('now', new DateTimeZone('Asia/Manila'));
+          $signOutTime->modify('+5 seconds');
+          $stmtUpdate = $pdo->prepare("UPDATE attendance SET Sign_Out_Time = ? WHERE Attendance_ID = ?");
+          $stmtUpdate->execute([$signOutTime->format('Y-m-d H:i:s'), $newAttendanceId]);
+          
+          return ['success' => true, 'action' => 'both', 'message' => "Student $studentId auto-signed in and out for this event"];
+        }
         return ['success' => false, 'message' => "Student $studentId has not signed in for this event yet"];
       } else {
         return ['success' => false, 'message' => "Student $studentId has already signed out for this event"];
