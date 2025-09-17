@@ -331,10 +331,10 @@ document.addEventListener('DOMContentLoaded', function () {
                                 </div>
                             </div>
                             <div class="visit-actions flex gap-2 mt-2">
-                                <button class="action-button view-event" data-id="${event.id}">View</button>
-                                ${event.status === 'pending' ? `<button class="action-button approve-event" data-id="${event.id}">Approve</button>` : ''}
-                                <button class="action-button edit-event" data-id="${event.id}">Edit</button>
-                                <button class="action-button delete-event" data-id="${event.id}">Delete</button>
+                                <button class="action-button view-event cursor-pointer" data-id="${event.id}">View</button>
+                                ${event.status === 'pending' ? `<button class="action-button approve-event cursor-pointer" data-id="${event.id}">Approve</button>` : ''}
+                                <button class="action-button edit-event cursor-pointer" data-id="${event.id}">Edit</button>
+                                <button class="action-button delete-event cursor-pointer" data-id="${event.id}">Delete</button>
                             </div>
                         `;
                         eventsContainer.appendChild(eventElement);
